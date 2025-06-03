@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-# Load the full list of verbs from CSV
+# Load the full list of verbs from the CSV in your repo
 @st.cache_data
 def load_verbs():
     return pd.read_csv("irregular_verbs.csv")
@@ -20,34 +20,23 @@ def check_answers(base, sp, pp):
     return is_correct, correct
 
 # Initialize session state
-if 'load_new_verb' not in st.session_state:
-    st.session_state.load_new_verb = True
-
-if 'current_verb' not in st.session_state:
-    st.session_state.current_verb = verbs_df.sample(1).iloc[0]
-
 if 'score' not in st.session_state:
     st.session_state.score = 0
-
 if 'attempts' not in st.session_state:
     st.session_state.attempts = 0
+if 'current_verb' not in st.session_state:
+    st.session_state.current_verb = verbs_df.sample(1).iloc[0]
 
 # App title
 st.title("Single Verb Quiz")
 
-# Load a new verb if needed
-if st.session_state.load_new_verb:
-    st.session_state.current_verb = verbs_df.sample(1).iloc[0]
-    st.session_state.load_new_verb = False
-
+# Display the current verb
 verb = st.session_state.current_verb
-
-# Display the base form
 st.markdown(f"### Base Form: **{verb['Base Form']}**")
 
 # Input fields
-simple_past = st.text_input("Enter the Simple Past form:", key="single_sp")
-past_participle = st.text_input("Enter the Past Participle form:", key="single_pp")
+simple_past = st.text_input("Enter the Simple Past form:")
+past_participle = st.text_input("Enter the Past Participle form:")
 
 # Submit button
 if st.button("Submit"):
@@ -62,7 +51,8 @@ if st.button("Submit"):
 
 # New verb button
 if st.button("New Verb"):
-    st.session_state.load_new_verb = True
+    st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+    st.experimental_rerun()
 
 # Score display
 st.markdown(f"**Score:** {st.session_state.score} / {st.session_state.attempts}")
