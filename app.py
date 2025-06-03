@@ -1,10 +1,7 @@
 import streamlit as st
 import pandas as pd
-from gtts import gTTS
-import os
-import base64
 
-# Sample verbs DataFrame (replace with your actual data)
+# Sample verbs DataFrame (replace with your full dataset)
 verbs_df = pd.DataFrame([
     {"Base Form": "go", "Simple Past": "went", "Past Participle": "gone"},
     {"Base Form": "eat", "Simple Past": "ate", "Past Participle": "eaten"},
@@ -22,20 +19,6 @@ def check_answers(base, sp, pp):
                   pp.strip().lower() == correct["Past Participle"].lower())
     return is_correct, correct
 
-# Function to generate audio and return HTML player
-def text_to_audio_html(text, filename):
-    tts = gTTS(text)
-    tts.save(filename)
-    with open(filename, "rb") as f:
-        audio_bytes = f.read()
-    b64 = base64.b64encode(audio_bytes).decode()
-    audio_html = f"""
-        <audio controls>
-            <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
-        </audio>
-    """
-    return audio_html
-
 # Initialize session state
 if 'load_new_verb' not in st.session_state:
     st.session_state.load_new_verb = True
@@ -49,39 +32,38 @@ if 'score' not in st.session_state:
 if 'attempts' not in st.session_state:
     st.session_state.attempts = 0
 
-# App mode
-mode = "Single Verb Quiz"
+# App title
+st.title("Single Verb Quiz")
 
-if mode == "Single Verb Quiz":
-    st.title("Single Verb Quiz")
+# Load a new verb if needed
+if st.session_state.load_new_verb:
+    st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+    st.session_state.load_new_verb = False
 
-    if st.session_state.load_new_verb:
-        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
-        st.session_state.load_new_verb = False
+verb = st.session_state.current_verb
 
-    verb = st.session_state.current_verb
+# Display the base form
+st.markdown(f"### Base Form: **{verb['Base Form']}**")
 
-    st.markdown(f"### Base Form: **{verb['Base Form']}**")
-    st.markdown(text_to_audio_html(verb['Base Form'], "base.mp3"), unsafe_allow_html=True)
+# Input fields
+simple_past = st.text_input("Enter the Simple Past form:", key="single_sp")
+past_participle = st.text_input("Enter the Past Participle form:", key="single_pp")
 
-    simple_past = st.text_input("Enter the Simple Past form:", key="single_sp")
-    past_participle = st.text_input("Enter the Past Participle form:", key="single_pp")
+# Submit button
+if st.button("Submit"):
+    st.session_state.attempts += 1
+    is_correct, correct = check_answers(verb['Base Form'], simple_past, past_participle)
+    if is_correct:
+        st.session_state.score += 1
+        st.success("Correct! Well done!")
+    else:
+        st.error("Incorrect.")
+        st.info(f"Correct forms: Simple Past - {correct['Simple Past']}, Past Participle - {correct['Past Participle']}")
 
-    if st.button("Submit"):
-        st.session_state.attempts += 1
-        is_correct, correct = check_answers(verb['Base Form'], simple_past, past_participle)
-        if is_correct:
-            st.session_state.score += 1
-            st.success("Correct! Well done!")
-        else:
-            st.error("Incorrect.")
-            st.info(f"Correct forms: Simple Past - {correct['Simple Past']}, Past Participle - {correct['Past Participle']}")
-            st.markdown("### Listen to correct forms:")
-            st.markdown(text_to_audio_html(correct['Simple Past'], "sp.mp3"), unsafe_allow_html=True)
-            st.markdown(text_to_audio_html(correct['Past Participle'], "pp.mp3"), unsafe_allow_html=True)
+# New verb button
+if st.button("New Verb"):
+    st.session_state.load_new_verb = True
+    st.experimental_rerun()
 
-    if st.button("New Verb"):
-        st.session_state.load_new_verb = True
-        st.experimental_rerun()
-
-    st.markdown(f"**Score:** {st.session_state.score} / {st.session_state.attempts}")
+# Score display
+st.markdown(f"**Score:** {st.session_state.score} / {st.session_state.attempts}")
