@@ -1,9 +1,12 @@
 import streamlit as st
 import pandas as pd
-import random
 
 # Load the list of irregular verbs
-verbs_df = pd.read_csv('verbs.csv')
+@st.cache_data
+def load_verbs():
+    return pd.read_csv('verbs.csv')
+
+verbs_df = load_verbs()
 
 # Function to check answers
 def check_answers(base_form, simple_past, past_participle):
@@ -20,8 +23,6 @@ if 'score' not in st.session_state:
     st.session_state.score = 0
 if 'attempts' not in st.session_state:
     st.session_state.attempts = 0
-if 'new_verb_flag' not in st.session_state:
-    st.session_state.new_verb_flag = False
 
 # App title
 st.title("Irregular Verbs Practice for ESL Students")
@@ -31,10 +32,6 @@ mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_s
 
 if mode == "Single Verb Quiz":
     st.header("Single Verb Quiz")
-
-    if st.session_state.new_verb_flag:
-        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
-        st.session_state.new_verb_flag = False
 
     verb = st.session_state.current_verb
     st.write(f"Base Form: **{verb['Base Form']}**")
@@ -53,7 +50,7 @@ if mode == "Single Verb Quiz":
             st.info(f"Correct forms: Simple Past - {correct['Simple Past']}, Past Participle - {correct['Past Participle']}")
 
     if st.button("New Verb"):
-        st.session_state.new_verb_flag = True
+        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
         st.experimental_rerun()
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
