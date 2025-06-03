@@ -33,7 +33,7 @@ mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_s
 if mode == "Single Verb Quiz":
     st.header("Single Verb Quiz")
 
-    if st.button("New Verb"):
+    if st.button("New Verb", key="new_verb", use_container_width=True, type="primary"):
         st.session_state.current_verb = verbs_df.sample(1).iloc[0]
 
     verb = st.session_state.current_verb
@@ -42,7 +42,7 @@ if mode == "Single Verb Quiz":
     simple_past = st.text_input("Enter the Simple Past form:", key="single_sp")
     past_participle = st.text_input("Enter the Past Participle form:", key="single_pp")
 
-    if st.button("Submit"):
+    if st.button("Submit", key="submit", use_container_width=True, type="secondary"):
         st.session_state.attempts += 1
         is_correct, correct = check_answers(verb['Base Form'], simple_past, past_participle)
         if is_correct:
@@ -65,7 +65,7 @@ elif mode == "Grid Mode":
     user_inputs = []
     st.write("### Fill in the forms:")
     for i, row in st.session_state.grid_verbs.iterrows():
-        col1, col2, col3 = st.columns([2, 1.5, 1.5])
+        col1, col2, col3, col4 = st.columns([2, 1.5, 1.5, 2])
         with col1:
             st.markdown(f"**{row['Base Form']}**")
         with col2:
@@ -75,12 +75,13 @@ elif mode == "Grid Mode":
         user_inputs.append((row['Base Form'], simple_past, past_participle))
 
     if st.button("Check All"):
-        for base_form, sp, pp in user_inputs:
+        for i, (base_form, sp, pp) in enumerate(user_inputs):
             is_correct, correct = check_answers(base_form, sp, pp)
-            if is_correct:
-                st.success(f"{base_form}: Correct!")
-            else:
-                st.error(f"{base_form}: Incorrect. Correct: {correct['Simple Past']}, {correct['Past Participle']}")
+            with st.columns([2, 1.5, 1.5, 2])[3]:
+                if is_correct:
+                    st.success(f"{base_form}: Correct!")
+                else:
+                    st.error(f"{base_form}: Incorrect. Correct: {correct['Simple Past']}, {correct['Past Participle']}")
 
     if st.button("New Verbs"):
         st.session_state.grid_verbs = verbs_df.sample(20).reset_index(drop=True)
@@ -93,3 +94,4 @@ elif mode == "Grid Mode":
 if st.button("Reset Score"):
     st.session_state.score = 0
     st.session_state.attempts = 0
+
