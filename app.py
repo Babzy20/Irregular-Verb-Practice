@@ -27,12 +27,26 @@ if 'streak' not in st.session_state:
     st.session_state.streak = 0
 if 'badges' not in st.session_state:
     st.session_state.badges = []
+if 'mistakes' not in st.session_state:
+    st.session_state.mistakes = []
+if 'reminders' not in st.session_state:
+    st.session_state.reminders = []
 
 # Define badges
 badges = [
     {"name": "No more a novice!", "emoji": "🙌", "trigger": 1, "description": "You got your first one right!"},
     {"name": "Five star!", "emoji": "⭐⭐⭐⭐⭐", "trigger": 5, "description": "You're on a roll! 5 in a row!"},
     {"name": "As great as ninTENdo", "emoji": "😅", "trigger": 10, "description": "10 in a row? You're a legend!"}
+]
+
+# Define reminders
+reminders = [
+    {"name": "You have fallen for it", "emoji": "🪂", "trigger": "feel_fall", "description": "Confused forms of feel and fall"},
+    {"name": "Learn how to write", "emoji": "✏️", "trigger": "writting_writen", "description": "Wrote 'writting' or 'writen'"},
+    {"name": "You just got caught!", "emoji": "🕵️‍♂️", "trigger": "catched", "description": "Wrote 'catched'"},
+    {"name": "Think it through or we'll teach you a lesson!", "emoji": "🧠", "trigger": "teach_think", "description": "Confused forms of teach and think"},
+    {"name": "When times are tough", "emoji": "🍦", "trigger": "5_mistakes_in_a_row", "description": "5 mistakes in a row"},
+    {"name": "Fool me twice, shame on me!", "emoji": "😤", "trigger": "repeat_mistake", "description": "Made the same mistake twice in the same session"}
 ]
 
 # Function to check and award badges
@@ -43,6 +57,39 @@ def check_badges(streak):
             st.session_state.badges.append(badge["name"])
             new_badges.append(badge)
     return new_badges
+
+# Function to check and award reminders
+def check_reminders(base_form, simple_past, past_participle):
+    new_reminders = []
+    mistake = {"base_form": base_form, "simple_past": simple_past, "past_participle": past_participle}
+    st.session_state.mistakes.append(mistake)
+
+    for reminder in reminders:
+        if reminder["trigger"] == "feel_fall" and (simple_past.lower() in ["fell", "felt"] or past_participle.lower() in ["fallen", "felt"]):
+            if reminder["name"] not in st.session_state.reminders:
+                st.session_state.reminders.append(reminder["name"])
+                new_reminders.append(reminder)
+        elif reminder["trigger"] == "writting_writen" and (simple_past.lower() == "writting" or past_participle.lower() == "writen"):
+            if reminder["name"] not in st.session_state.reminders:
+                st.session_state.reminders.append(reminder["name"])
+                new_reminders.append(reminder)
+        elif reminder["trigger"] == "catched" and simple_past.lower() == "catched":
+            if reminder["name"] not in st.session_state.reminders:
+                st.session_state.reminders.append(reminder["name"])
+                new_reminders.append(reminder)
+        elif reminder["trigger"] == "teach_think" and (simple_past.lower() in ["taught", "thought"] or past_participle.lower() in ["taught", "thought"]):
+            if reminder["name"] not in st.session_state.reminders:
+                st.session_state.reminders.append(reminder["name"])
+                new_reminders.append(reminder)
+        elif reminder["trigger"] == "5_mistakes_in_a_row" and len(st.session_state.mistakes) >= 5 and all(m["simple_past"] == "" or m["past_participle"] == "" for m in st.session_state.mistakes[-5:]):
+            if reminder["name"] not in st.session_state.reminders:
+                st.session_state.reminders.append(reminder["name"])
+                new_reminders.append(reminder)
+        elif reminder["trigger"] == "repeat_mistake" and st.session_state.mistakes.count(mistake) > 1:
+            if reminder["name"] not in st.session_state.reminders:
+                st.session_state.reminders.append(reminder["name"])
+                new_reminders.append(reminder)
+    return new_reminders
 
 # App title
 st.title("📚 Irregular Verbs Practice")
@@ -78,6 +125,10 @@ if mode == "Single Verb Quiz":
             st.session_state.streak = 0
             st.error("Incorrect.")
             st.info(f"Correct forms: Simple Past - {correct['Simple Past']}, Past Participle - {correct['Past Participle']}")
+            new_reminders = check_reminders(verb['Base Form'], simple_past, past_participle)
+            if new_reminders:
+                for reminder in new_reminders:
+                    st.toast(f"😬 Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
     if st.session_state.attempts > 0:
@@ -123,6 +174,8 @@ if st.button("🔁 Reset Score"):
     st.session_state.attempts = 0
     st.session_state.streak = 0
     st.session_state.badges = []
+    st.session_state.mistakes = []
+    st.session_state.reminders = []
 
 # Display badge board
 st.header("🏅 Achievements")
@@ -132,3 +185,13 @@ for badge in badges:
     badge_table.append([badge["emoji"], badge["name"], badge["description"], status])
 
 st.table(pd.DataFrame(badge_table, columns=["Icon", "Badge Name", "Description", "Status"]))
+
+# Display reminders board
+st.header("😬 Reminders: Learn from Your Mistakes")
+reminder_table = []
+for reminder in reminders:
+    status = "✅ Earned" if reminder["name"] in st.session_state.reminders else "🔒 Locked"
+    reminder_table.append([reminder["emoji"], reminder["name"], reminder["description"], status])
+
+st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Description", "Status"]))
+
