@@ -27,28 +27,21 @@ if 'attempts' not in st.session_state:
 # Custom styles for buttons
 custom_button_styles = """
 <style>
-/* Red button for New Verb */
 #new-verb-button button {
     background-color: #e74c3c !important;
     color: white !important;
     font-weight: bold;
 }
-
-/* Green button for Submit */
 #submit-button button {
     background-color: #27ae60 !important;
     color: white !important;
     font-weight: bold;
 }
-
-/* Blue button for New Verbs */
 #new-verbs-button button {
     background-color: #2980b9 !important;
     color: white !important;
     font-weight: bold;
 }
-
-/* Gray button for Reset Score */
 #reset-score-button button {
     background-color: #7f8c8d !important;
     color: white !important;
@@ -67,7 +60,6 @@ mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_s
 if mode == "Single Verb Quiz":
     st.header("Single Verb Quiz")
 
-    # New Verb button
     st.markdown('<div id="new-verb-button">', unsafe_allow_html=True)
     new_verb_clicked = st.button("New Verb", key="new_verb_button")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -81,7 +73,6 @@ if mode == "Single Verb Quiz":
     simple_past = st.text_input("Enter the Simple Past form:", key="single_sp")
     past_participle = st.text_input("Enter the Past Participle form:", key="single_pp")
 
-    # Submit button
     st.markdown('<div id="submit-button">', unsafe_allow_html=True)
     submit_clicked = st.button("Submit", key="submit_button")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -127,7 +118,6 @@ elif mode == "Grid Mode":
                     st.error(f"{correct['Simple Past']}, {correct['Past Participle']}")
         user_inputs.append((row['Base Form'], simple_past, past_participle))
 
-    # New Verbs button
     st.markdown('<div id="new-verbs-button">', unsafe_allow_html=True)
     if st.button("New Verbs"):
         st.session_state.grid_verbs = verbs_df.sample(20).reset_index(drop=True)
@@ -138,9 +128,8 @@ elif mode == "Grid Mode":
         accuracy = (st.session_state.score / st.session_state.attempts) * 100
         st.write(f"Accuracy: {accuracy:.2f}%")
 
-# Reset Score button
 st.markdown('<div id="reset-score-button">', unsafe_allow_html=True)
 if st.button("Reset Score"):
     st.session_state.score = 0
     st.session_state.attempts = 0
-st.markdown('</div>', unsafe
+st.markdown('</div>', unsafe_allow_html=True)
