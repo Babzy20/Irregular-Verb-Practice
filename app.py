@@ -33,6 +33,9 @@ mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_s
 if mode == "Single Verb Quiz":
     st.header("Single Verb Quiz")
 
+    if st.button("New Verb"):
+        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+
     verb = st.session_state.current_verb
     st.write(f"Base Form: **{verb['Base Form']}**")
 
@@ -48,10 +51,6 @@ if mode == "Single Verb Quiz":
         else:
             st.error("Incorrect.")
             st.info(f"Correct forms: Simple Past - {correct['Simple Past']}, Past Participle - {correct['Past Participle']}")
-
-    if st.button("New Verb"):
-        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
-        st.experimental_rerun()
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
     if st.session_state.attempts > 0:
@@ -85,7 +84,6 @@ elif mode == "Grid Mode":
 
     if st.button("New Verbs"):
         st.session_state.grid_verbs = verbs_df.sample(20).reset_index(drop=True)
-        st.experimental_rerun()
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
     if st.session_state.attempts > 0:
