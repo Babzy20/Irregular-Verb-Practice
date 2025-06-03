@@ -63,7 +63,6 @@ if st.button("Submit"):
 # New verb button
 if st.button("New Verb"):
     st.session_state.load_new_verb = True
-    st.experimental_rerun()
 
 # Score display
 st.markdown(f"**Score:** {st.session_state.score} / {st.session_state.attempts}")
