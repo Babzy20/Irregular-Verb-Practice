@@ -14,14 +14,14 @@ def check_answers(base_form, simple_past, past_participle):
     ), correct
 
 # Initialize session state variables
-if "score" not in st.session_state:
-    st.session_state.score = 0
-if "attempts" not in st.session_state:
-    st.session_state.attempts = 0
-if "current_verb" not in st.session_state:
+if 'current_verb' not in st.session_state:
     st.session_state.current_verb = verbs_df.sample(1).iloc[0]
-if "grid_verbs" not in st.session_state:
-    st.session_state.grid_verbs = verbs_df.sample(20).reset_index(drop=True)
+if 'score' not in st.session_state:
+    st.session_state.score = 0
+if 'attempts' not in st.session_state:
+    st.session_state.attempts = 0
+if 'new_verb_flag' not in st.session_state:
+    st.session_state.new_verb_flag = False
 
 # App title
 st.title("Irregular Verbs Practice for ESL Students")
@@ -29,14 +29,13 @@ st.title("Irregular Verbs Practice for ESL Students")
 # Mode selection
 mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_selector")
 
-# Score and accuracy display
-st.write(f"Score: {st.session_state.score}")
-if st.session_state.attempts > 0:
-    accuracy = (st.session_state.score / st.session_state.attempts) * 100
-    st.write(f"Accuracy: {accuracy:.2f}%")
-
 if mode == "Single Verb Quiz":
     st.header("Single Verb Quiz")
+
+    if st.session_state.new_verb_flag:
+        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+        st.session_state.new_verb_flag = False
+
     verb = st.session_state.current_verb
     st.write(f"Base Form: **{verb['Base Form']}**")
 
@@ -52,13 +51,21 @@ if mode == "Single Verb Quiz":
         else:
             st.error("Incorrect.")
             st.info(f"Correct forms: Simple Past - {correct['Simple Past']}, Past Participle - {correct['Past Participle']}")
-        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
 
     if st.button("New Verb"):
-        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+        st.session_state.new_verb_flag = True
+        st.experimental_rerun()
+
+    st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
+    if st.session_state.attempts > 0:
+        accuracy = (st.session_state.score / st.session_state.attempts) * 100
+        st.write(f"Accuracy: {accuracy:.2f}%")
 
 elif mode == "Grid Mode":
     st.header("Grid Mode")
+    if "grid_verbs" not in st.session_state:
+        st.session_state.grid_verbs = verbs_df.sample(20).reset_index(drop=True)
+
     user_inputs = []
     st.write("### Fill in the forms:")
     for i, row in st.session_state.grid_verbs.iterrows():
@@ -73,18 +80,21 @@ elif mode == "Grid Mode":
 
     if st.button("Check All"):
         for base_form, sp, pp in user_inputs:
-            st.session_state.attempts += 1
             is_correct, correct = check_answers(base_form, sp, pp)
             if is_correct:
-                st.session_state.score += 1
                 st.success(f"{base_form}: Correct!")
             else:
                 st.error(f"{base_form}: Incorrect. Correct: {correct['Simple Past']}, {correct['Past Participle']}")
 
     if st.button("New Verbs"):
         st.session_state.grid_verbs = verbs_df.sample(20).reset_index(drop=True)
+        st.experimental_rerun()
 
-# Reset score button
+    st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
+    if st.session_state.attempts > 0:
+        accuracy = (st.session_state.score / st.session_state.attempts) * 100
+        st.write(f"Accuracy: {accuracy:.2f}%")
+
 if st.button("Reset Score"):
     st.session_state.score = 0
     st.session_state.attempts = 0
