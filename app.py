@@ -16,13 +16,33 @@ def check_answers(base_form, simple_past, past_participle):
         past_participle.strip().lower() == correct['Past Participle'].strip().lower()
     ), correct
 
-# Initialize session state variables
+# Initialize session state
 if 'current_verb' not in st.session_state:
     st.session_state.current_verb = verbs_df.sample(1).iloc[0]
 if 'score' not in st.session_state:
     st.session_state.score = 0
 if 'attempts' not in st.session_state:
     st.session_state.attempts = 0
+if 'streak' not in st.session_state:
+    st.session_state.streak = 0
+if 'badges' not in st.session_state:
+    st.session_state.badges = []
+
+# Define badges
+badges = [
+    {"name": "No more a novice!", "emoji": "🙌", "trigger": 1, "description": "You got your first one right!"},
+    {"name": "Five star!", "emoji": "⭐⭐⭐⭐⭐", "trigger": 5, "description": "You're on a roll! 5 in a row!"},
+    {"name": "As great as ninTENdo", "emoji": "😅", "trigger": 10, "description": "10 in a row? You're a legend!"}
+]
+
+# Function to check and award badges
+def check_badges(streak):
+    new_badges = []
+    for badge in badges:
+        if streak >= badge["trigger"] and badge["name"] not in st.session_state.badges:
+            st.session_state.badges.append(badge["name"])
+            new_badges.append(badge)
+    return new_badges
 
 # App title
 st.title("📚 Irregular Verbs Practice")
@@ -47,8 +67,15 @@ if mode == "Single Verb Quiz":
         is_correct, correct = check_answers(verb['Base Form'], simple_past, past_participle)
         if is_correct:
             st.session_state.score += 1
+            st.session_state.streak += 1
             st.success("Correct! Well done!")
+            new_badges = check_badges(st.session_state.streak)
+            if new_badges:
+                st.balloons()
+                for badge in new_badges:
+                    st.toast(f"🎉 New Badge Earned: {badge['emoji']} {badge['name']} - {badge['description']}")
         else:
+            st.session_state.streak = 0
             st.error("Incorrect.")
             st.info(f"Correct forms: Simple Past - {correct['Simple Past']}, Past Participle - {correct['Past Participle']}")
 
@@ -94,3 +121,14 @@ elif mode == "Grid Mode":
 if st.button("🔁 Reset Score"):
     st.session_state.score = 0
     st.session_state.attempts = 0
+    st.session_state.streak = 0
+    st.session_state.badges = []
+
+# Display badge board
+st.header("🏅 Achievements")
+badge_table = []
+for badge in badges:
+    status = "✅ Earned" if badge["name"] in st.session_state.badges else "🔒 Locked"
+    badge_table.append([badge["emoji"], badge["name"], badge["description"], status])
+
+st.table(pd.DataFrame(badge_table, columns=["Icon", "Badge Name", "Description", "Status"]))
