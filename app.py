@@ -1,43 +1,68 @@
 import streamlit as st
 import pandas as pd
-import random
+from gtts import gTTS
+import os
+import base64
 
-# Load the list of irregular verbs
-verbs_df = pd.read_csv('verbs.csv')
+# Sample verbs DataFrame (replace with your actual data)
+verbs_df = pd.DataFrame([
+    {"Base Form": "go", "Simple Past": "went", "Past Participle": "gone"},
+    {"Base Form": "eat", "Simple Past": "ate", "Past Participle": "eaten"},
+    {"Base Form": "write", "Simple Past": "wrote", "Past Participle": "written"},
+])
 
 # Function to check answers
-def check_answers(base_form, simple_past, past_participle):
-    correct = verbs_df[verbs_df['Base Form'] == base_form].iloc[0]
-    return (
-        simple_past.strip().lower() == correct['Simple Past'].strip().lower() and
-        past_participle.strip().lower() == correct['Past Participle'].strip().lower()
-    ), correct
+def check_answers(base, sp, pp):
+    row = verbs_df[verbs_df["Base Form"] == base].iloc[0]
+    correct = {
+        "Simple Past": row["Simple Past"],
+        "Past Participle": row["Past Participle"]
+    }
+    is_correct = (sp.strip().lower() == correct["Simple Past"].lower() and
+                  pp.strip().lower() == correct["Past Participle"].lower())
+    return is_correct, correct
 
-# Initialize session state variables
+# Function to generate audio and return HTML player
+def text_to_audio_html(text, filename):
+    tts = gTTS(text)
+    tts.save(filename)
+    with open(filename, "rb") as f:
+        audio_bytes = f.read()
+    b64 = base64.b64encode(audio_bytes).decode()
+    audio_html = f"""
+        <audio controls>
+            <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
+        </audio>
+    """
+    return audio_html
+
+# Initialize session state
+if 'load_new_verb' not in st.session_state:
+    st.session_state.load_new_verb = True
+
 if 'current_verb' not in st.session_state:
     st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+
 if 'score' not in st.session_state:
     st.session_state.score = 0
+
 if 'attempts' not in st.session_state:
     st.session_state.attempts = 0
-if 'new_verb_flag' not in st.session_state:
-    st.session_state.new_verb_flag = False
 
-# App title
-st.title("Irregular Verbs Practice for ESL Students")
-
-# Mode selection
-mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_selector")
+# App mode
+mode = "Single Verb Quiz"
 
 if mode == "Single Verb Quiz":
-    st.header("Single Verb Quiz")
+    st.title("Single Verb Quiz")
 
-    if st.session_state.new_verb_flag:
+    if st.session_state.load_new_verb:
         st.session_state.current_verb = verbs_df.sample(1).iloc[0]
-        st.session_state.new_verb_flag = False
+        st.session_state.load_new_verb = False
 
     verb = st.session_state.current_verb
-    st.write(f"Base Form: **{verb['Base Form']}**")
+
+    st.markdown(f"### Base Form: **{verb['Base Form']}**")
+    st.markdown(text_to_audio_html(verb['Base Form'], "base.mp3"), unsafe_allow_html=True)
 
     simple_past = st.text_input("Enter the Simple Past form:", key="single_sp")
     past_participle = st.text_input("Enter the Past Participle form:", key="single_pp")
@@ -51,51 +76,12 @@ if mode == "Single Verb Quiz":
         else:
             st.error("Incorrect.")
             st.info(f"Correct forms: Simple Past - {correct['Simple Past']}, Past Participle - {correct['Past Participle']}")
+            st.markdown("### Listen to correct forms:")
+            st.markdown(text_to_audio_html(correct['Simple Past'], "sp.mp3"), unsafe_allow_html=True)
+            st.markdown(text_to_audio_html(correct['Past Participle'], "pp.mp3"), unsafe_allow_html=True)
 
     if st.button("New Verb"):
-        st.session_state.new_verb_flag = True
+        st.session_state.load_new_verb = True
         st.experimental_rerun()
 
-    st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
-    if st.session_state.attempts > 0:
-        accuracy = (st.session_state.score / st.session_state.attempts) * 100
-        st.write(f"Accuracy: {accuracy:.2f}%")
-
-elif mode == "Grid Mode":
-    st.header("Grid Mode")
-    if "grid_verbs" not in st.session_state:
-        st.session_state.grid_verbs = verbs_df.sample(20).reset_index(drop=True)
-
-    user_inputs = []
-    st.write("### Fill in the forms:")
-    for i, row in st.session_state.grid_verbs.iterrows():
-        col1, col2, col3 = st.columns([2, 1.5, 1.5])
-        with col1:
-            st.markdown(f"**{row['Base Form']}**")
-        with col2:
-            simple_past = st.text_input("", key=f"sp_{i}", placeholder="Simple Past", label_visibility="collapsed")
-        with col3:
-            past_participle = st.text_input("", key=f"pp_{i}", placeholder="Past Participle", label_visibility="collapsed")
-        user_inputs.append((row['Base Form'], simple_past, past_participle))
-
-    if st.button("Check All"):
-        for base_form, sp, pp in user_inputs:
-            is_correct, correct = check_answers(base_form, sp, pp)
-            if is_correct:
-                st.success(f"{base_form}: Correct!")
-            else:
-                st.error(f"{base_form}: Incorrect. Correct: {correct['Simple Past']}, {correct['Past Participle']}")
-
-    if st.button("New Verbs"):
-        st.session_state.grid_verbs = verbs_df.sample(20).reset_index(drop=True)
-        st.experimental_rerun()
-
-    st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
-    if st.session_state.attempts > 0:
-        accuracy = (st.session_state.score / st.session_state.attempts) * 100
-        st.write(f"Accuracy: {accuracy:.2f}%")
-
-if st.button("Reset Score"):
-    st.session_state.score = 0
-    st.session_state.attempts = 0
-
+    st.markdown(f"**Score:** {st.session_state.score} / {st.session_state.attempts}")
