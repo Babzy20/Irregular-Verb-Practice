@@ -8,7 +8,7 @@ verbs_df = pd.read_csv('verbs.csv')
 st.title("Irregular Verbs Practice for ESL Students")
 
 # Mode selection
-mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"])
+mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_selector")
 
 if mode == "Single Verb Quiz":
     st.header("Single Verb Quiz")
