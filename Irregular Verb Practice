@@ -1,0 +1,36 @@
+
+import streamlit as st
+import pandas as pd
+
+# Load the list of irregular verbs
+verbs_df = pd.read_csv('verbs.csv')
+
+# Function to check the user's answers
+def check_answers(base_form, simple_past, past_participle):
+    correct_row = verbs_df[verbs_df['Base Form'] == base_form]
+    if correct_row.empty:
+        return False, "Verb not found."
+    correct_simple_past = correct_row.iloc[0]['Simple Past']
+    correct_past_participle = correct_row.iloc[0]['Past Participle']
+    is_correct = (simple_past == correct_simple_past) and (past_participle == correct_past_participle)
+    feedback = f"Correct forms: Simple Past - {correct_simple_past}, Past Participle - {correct_past_participle}"
+    return is_correct, feedback
+
+# Streamlit app layout
+st.title("ESL Irregular Verbs Practice")
+
+# Select a verb to practice
+base_form = st.selectbox("Choose a verb:", verbs_df['Base Form'])
+
+# User inputs for simple past and past participle
+simple_past = st.text_input("Enter the Simple Past form:")
+past_participle = st.text_input("Enter the Past Participle form:")
+
+# Check answers and provide feedback
+if st.button("Submit"):
+    is_correct, feedback = check_answers(base_form, simple_past, past_participle)
+    if is_correct:
+        st.success("Correct!")
+    else:
+        st.error("Incorrect.")
+    st.info(feedback)
