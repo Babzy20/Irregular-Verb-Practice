@@ -21,6 +21,29 @@ if mode == "Single Verb Quiz":
             st.info(f"Correct forms: Simple Past - {correct['Simple Past']}, Past Participle - {correct['Past Participle']}")
         st.session_state.current_verb = verbs_df.sample(1).iloc[0]
 
+# Mode selection
+mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"])
+
+if mode == "Single Verb Quiz":
+    st.header("Single Verb Quiz")
+    if "current_verb" not in st.session_state:
+        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+
+    verb = st.session_state.current_verb
+    st.write(f"Base Form: **{verb['Base Form']}**")
+
+    simple_past = st.text_input("Enter the Simple Past form:")
+    past_participle = st.text_input("Enter the Past Participle form:")
+
+    if st.button("Submit"):
+        is_correct, correct = check_answers(verb['Base Form'], simple_past, past_participle)
+        if is_correct:
+            st.success("Correct! Well done!")
+        else:
+            st.error("Incorrect.")
+            st.info(f"Correct forms: Simple Past - {correct['Simple Past']}, Past Participle - {correct['Past Participle']}")
+        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+
 elif mode == "Grid Mode":
     st.header("Grid Mode")
     if "grid_verbs" not in st.session_state:
