@@ -59,20 +59,33 @@ if mode == "Single Verb Quiz":
 
 elif mode == "Grid Mode":
     st.header("Grid Mode")
-    if "grid_verbs" not in st.session_state:
-        st.session_state.grid_verbs = verbs_df.sample(20).reset_index(drop=True)
+if "grid_verbs" not in st.session_state:
+    st.session_state.grid_verbs = verbs_df.sample(20).reset_index(drop=True)
 
-    user_inputs = []
-    st.write("### Fill in the forms:")
-    for i, row in st.session_state.grid_verbs.iterrows():
-        col1, col2, col3, col4 = st.columns([2, 1.5, 1.5, 2])
-        with col1:
-            st.markdown(f"**{row['Base Form']}**")
-        with col2:
-            simple_past = st.text_input("", key=f"sp_{i}", placeholder="Simple Past", label_visibility="collapsed")
-        with col3:
-            past_participle = st.text_input("", key=f"pp_{i}", placeholder="Past Participle", label_visibility="collapsed")
-        user_inputs.append((row['Base Form'], simple_past, past_participle))
+user_inputs = []
+show_answers = False
+
+if st.button("Check All"):
+    show_answers = True
+
+st.write("### Fill in the forms:")
+for i, row in st.session_state.grid_verbs.iterrows():
+    col1, col2, col3, col4 = st.columns([2, 1.5, 1.5, 2])
+    with col1:
+        st.markdown(f"**{row['Base Form']}**")
+    with col2:
+        simple_past = st.text_input("", key=f"sp_{i}", placeholder="Simple Past", label_visibility="collapsed")
+    with col3:
+        past_participle = st.text_input("", key=f"pp_{i}", placeholder="Past Participle", label_visibility="collapsed")
+    with col4:
+        if show_answers:
+            is_correct, correct = check_answers(row['Base Form'], simple_past, past_participle)
+            if is_correct:
+                st.success("✓")
+            else:
+                st.error(f"{correct['Simple Past']}, {correct['Past Participle']}")
+    user_inputs.append((row['Base Form'], simple_past, past_participle))
+
 
     if st.button("Check All"):
         for i, (base_form, sp, pp) in enumerate(user_inputs):
