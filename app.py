@@ -1,37 +1,64 @@
 import streamlit as st
 import pandas as pd
+import random
 
-# Load the list of irregular verbs from the CSV file
+# Load the list of irregular verbs
 verbs_df = pd.read_csv('verbs.csv')
 
-# Function to check the user's answers
+# Function to check answers
 def check_answers(base_form, simple_past, past_participle):
-    correct_simple_past = verbs_df.loc[verbs_df['Base Form'] == base_form, 'Simple Past'].values[0]
-    correct_past_participle = verbs_df.loc[verbs_df['Base Form'] == base_form, 'Past Participle'].values[0]
-    
-    simple_past_correct = simple_past.lower() == correct_simple_past.lower()
-    past_participle_correct = past_participle.lower() == correct_past_participle.lower()
-    
-    return simple_past_correct, past_participle_correct, correct_simple_past, correct_past_participle
+    correct = verbs_df[verbs_df['Base Form'] == base_form].iloc[0]
+    return (
+        simple_past.strip().lower() == correct['Simple Past'].strip().lower() and
+        past_participle.strip().lower() == correct['Past Participle'].strip().lower()
+    ), correct
 
-# Streamlit app layout
-st.title("ESL Irregular Verbs Practice")
+# App title
+st.title("Irregular Verbs Practice for ESL Students")
 
-# Select a verb to practice
-base_form = st.selectbox("Choose a verb to practice:", verbs_df['Base Form'])
+# Mode selection
+mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"])
 
-# User input for simple past and past participle
-simple_past = st.text_input("Enter the Simple Past form:")
-past_participle = st.text_input("Enter the Past Participle form:")
+if mode == "Single Verb Quiz":
+    st.header("Single Verb Quiz")
+    if "current_verb" not in st.session_state:
+        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
 
-# Check answers when the user submits
-if st.button("Submit"):
-    simple_past_correct, past_participle_correct, correct_simple_past, correct_past_participle = check_answers(base_form, simple_past, past_participle)
-    
-    if simple_past_correct and past_participle_correct:
-        st.success("Correct! Well done!")
-    else:
-        st.error("Incorrect. Try again.")
-        st.write(f"The correct forms are: Simple Past - {correct_simple_past}, Past Participle - {correct_past_participle}")
+    verb = st.session_state.current_verb
+    st.write(f"Base Form: **{verb['Base Form']}**")
 
+    simple_past = st.text_input("Enter the Simple Past form:")
+    past_participle = st.text_input("Enter the Past Participle form:")
 
+    if st.button("Submit"):
+        is_correct, correct = check_answers(verb['Base Form'], simple_past, past_participle)
+        if is_correct:
+            st.success("Correct! Well done!")
+        else:
+            st.error("Incorrect.")
+            st.info(f"Correct forms: Simple Past - {correct['Simple Past']}, Past Participle - {correct['Past Participle']}")
+        # Refresh for next round
+        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+
+elif mode == "Grid Mode":
+    st.header("Grid Mode")
+    if "grid_verbs" not in st.session_state:
+        st.session_state.grid_verbs = verbs_df.sample(20).reset_index(drop=True)
+
+    user_inputs = []
+    for i, row in st.session_state.grid_verbs.iterrows():
+        st.write(f"**{row['Base Form']}**")
+        col1, col2 = st.columns(2)
+        with col1:
+            simple_past = st.text_input(f"Simple Past {i+1}", key=f"sp_{i}")
+        with col2:
+            past_participle = st.text_input(f"Past Participle {i+1}", key=f"pp_{i}")
+        user_inputs.append((row['Base Form'], simple_past, past_participle))
+
+    if st.button("Check All"):
+        for base_form, sp, pp in user_inputs:
+            is_correct, correct = check_answers(base_form, sp, pp)
+            if is_correct:
+                st.success(f"{base_form}: Correct!")
+            else:
+                st.error(f"{base_form}: Incorrect. Correct: {correct['Simple Past']}, {correct['Past Participle']}")
