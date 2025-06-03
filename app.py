@@ -66,6 +66,7 @@ if st.button("New Verb"):
 
 # Score display
 st.markdown(f"**Score:** {st.session_state.score} / {st.session_state.attempts}")
+
 import streamlit as st
 import pandas as pd
 
