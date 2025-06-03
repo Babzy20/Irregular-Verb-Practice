@@ -33,7 +33,9 @@ mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_s
 if mode == "Single Verb Quiz":
     st.header("Single Verb Quiz")
 
-    if st.button("New Verb", key="new_verb_button"):
+    # Red "New Verb" button
+    new_verb_clicked = st.button("New Verb", key="new_verb_button")
+    if new_verb_clicked:
         st.session_state.current_verb = verbs_df.sample(1).iloc[0]
 
     verb = st.session_state.current_verb
@@ -96,15 +98,3 @@ if st.button("Reset Score"):
     st.session_state.attempts = 0
 
 # Custom CSS for button colors
-st.markdown("""
-    <style>
-    div[data-testid="stButton"] > button:first-child {
-        background-color: #4CAF50;
-        color: white;
-    }
-    div[data-testid="stButton"] > button:nth-child(2) {
-        background-color: #008CBA;
-        color: white;
-    }
-    </style>
-""", unsafe_allow_html=True)
