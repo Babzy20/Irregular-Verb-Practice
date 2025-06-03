@@ -25,7 +25,7 @@ if 'attempts' not in st.session_state:
     st.session_state.attempts = 0
 
 # App title
-st.title("Irregular Verbs Practice for ESL Students")
+st.title("Irregular Verbs Practice")
 
 # Mode selection
 mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_selector")
