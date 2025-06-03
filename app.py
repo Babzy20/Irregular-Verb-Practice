@@ -1,3 +1,12 @@
+import streamlit as st
+import pandas as pd
+
+# Load the list of irregular verbs
+verbs_df = pd.read_csv('verbs.csv')
+
+# App title
+st.title("Irregular Verbs Practice for ESL Students")
+
 # Mode selection
 mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"])
 
