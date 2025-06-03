@@ -73,7 +73,11 @@ def check_reminders(base_form, simple_past, past_participle):
             if reminder["name"] not in st.session_state.reminders:
                 st.session_state.reminders.append(reminder["name"])
                 new_reminders.append(reminder)
-        elif reminder["trigger"] == "catched" and simple_past.lower() == "catched":
+        elif reminder["trigger"] == "catched" and (     
+            simple_past.strip().lower() == "catched" or past_participle.strip().lower() == 
+            "catched"
+        ):
+            
             if reminder["name"] not in st.session_state.reminders:
                 st.session_state.reminders.append(reminder["name"])
                 new_reminders.append(reminder)
