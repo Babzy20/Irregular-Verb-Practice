@@ -154,15 +154,7 @@ if mode == "Single Verb Quiz":
             st.info(f"Correct forms: Simple Past - {correct['Simple Past']}, Past Participle - {correct['Past Participle']}")
             new_reminders = check_reminders(verb['Base Form'], simple_past, past_participle)
             if new_reminders:
-                reminder in new_reminders:
-                    st.markdown(f'''
-                        <div class="shake">
-                            <p style="color:red; font-weight:bold;">😬 Reminder: 
-
-            {reminder['emoji']} {reminder['name']} - {reminder['description']}</p>
-                        </div>
-                    ''', unsafe_allow_html=True
-
+                for reminder in new_reminders:
                     st.toast(f"😬 Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
