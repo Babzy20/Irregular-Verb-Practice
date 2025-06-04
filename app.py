@@ -115,7 +115,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
 # Mode selection
 mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_selector")
 
@@ -163,7 +162,6 @@ elif mode == "Grid Mode":
         st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
 
     user_inputs = []
-    show_answers = False
 
     st.write("### Fill in the forms:")
     for i, row in st.session_state.grid_verbs.iterrows():
@@ -175,7 +173,7 @@ elif mode == "Grid Mode":
         with col3:
             past_participle = st.text_input("", key=f"pp_{i}", placeholder="Past Participle", label_visibility="collapsed")
         with col4:
-            if show_answers:
+            if st.session_state.show_answers:
                 is_correct, correct = check_answers(row['Base Form'], simple_past, past_participle)
                 if is_correct:
                     st.success("✓")
@@ -184,28 +182,24 @@ elif mode == "Grid Mode":
         user_inputs.append((row['Base Form'], simple_past, past_participle))
 
     if st.button("🔍 Check All"):
-        show_answers = True
-        st.session_state.attempts += 10
+        st.session_state.show_answers = True
+        st.session_state.attempts += 1
         correct_count = 0
-        for i, (base_form, simple_past, past_participle) in enumerate(user_inputs):
-            is_correct, correct = check_answers(base_form, simple_past, past_participle)
+        for base_form, simple_past, past_participle in user_inputs:
+            is_correct, _ = check_answers(base_form, simple_past, past_participle)
             if is_correct:
                 correct_count += 1
-                st.success(f"{base_form}: ✓")
-            else:
-                st.error(f"{base_form}: {correct['Simple Past']}, {correct['Past Participle']}")
         st.session_state.score += correct_count
-        st.session_state.streak += correct_count
+        st.session_state.streak = correct_count if correct_count == 10 else 0
         new_badges = check_badges(st.session_state.streak)
         if new_badges:
             st.balloons()
             for badge in new_badges:
                 st.toast(f"🎉 New Badge Earned: {badge['emoji']} {badge['name']} - {badge['description']}")
-        if correct_count < 10:
-            st.session_state.streak = 0
 
     if st.button("🆕 New Verbs"):
         st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
+        st.session_state.show_answers = False
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
     if st.session_state.attempts > 0:
@@ -229,9 +223,8 @@ with st.sidebar:
         badge_table.append([badge["emoji"], badge["name"], badge["description"], status])
     st.table(pd.DataFrame(badge_table, columns=["Icon", "Badge Name", "Description", "Status"]))
 
-# Display reminders board in sidebar
-with st.sidebar:
-    st.header("😬 Reminders: Learn from Your Mistakes")
+# Display reminders board in expandable section
+with st.expander("😬 Reminders: Learn from Your Mistakes"):
     reminder_table = []
     for reminder in reminders:
         if reminder["name"] in st.session_state.reminders:
@@ -242,3 +235,4 @@ with st.sidebar:
         st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Description", "Status"]))
     else:
         st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Status"]))
+
