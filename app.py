@@ -98,28 +98,6 @@ def check_reminders(base_form, simple_past, past_participle):
 # App title
 st.title("📚 Irregular Verbs Practice")
 
-st.markdown("""
-    <style>
-    .shake {
-        animation: shake 0.5s;
-        animation-iteration-count: 1;
-    }
-
-    @keyframes shake {
-        0% { transform: translate(1px, 1px) rotate(0deg); }
-        10% { transform: translate(-1px, -2px) rotate(-1deg); }
-        20% { transform: translate(-3px, 0px) rotate(1deg); }
-        translate(3px, 2px) rotate(0deg); }
-        40% { transform: translate(1px, -1px) rotate(1deg); }
-        50% { transform: translate(-1px, 2px) rotate(-1deg); }
-        60% { transform: translate(-3px, 1px) rotate(0deg); }
-        70% { transform: translate(3px, 1px) rotate(-1deg); }
-        80% { transform: translate(-1px, -1px) rotate(1deg); }
-        90% { transform: translate(1px, 2px) rotate(0deg); }
-        100% { transform: translate(1px, -2px) rotate(-1deg); }
-    }
-   _html=True)
-
 # Mode selection
 mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_selector")
 
@@ -149,7 +127,7 @@ if mode == "Single Verb Quiz":
                     st.toast(f"🎉 New Badge Earned: {badge['emoji']} {badge['name']} - {badge['description']}")
         else:
             st.session_state.streak = 0
-            st.markdown('<div class="shake"><p style="color:red; font-weight:bold;">❌ Incorrect!</p></div>', unsafe_allow_html=True)
+            st.error("Incorrect.")
             st.info(f"Correct forms: Simple Past - {correct['Simple Past']}, Past Participle - {correct['Past Participle']}")
             new_reminders = check_reminders(verb['Base Form'], simple_past, past_participle)
             if new_reminders:
@@ -184,12 +162,8 @@ elif mode == "Grid Mode":
                 if is_correct:
                     st.success("✓")
                 else:
-                    st.markdown(f'''
-    <div class="shake">
-        < style="color:red; font-weight:bold;">❌ {correct['Simple Past']}, {correct['Past Participle']}</p>
-    </div>
-''', unsafe_allow_html=True)
-
+                    st.error(f"{correct['Simple Past']}, {correct['Past Participle']}")
+        user_inputs.append((row['Base Form'], simple_past, past_participle))
 
     if st.button("🆕 New Verbs"):
         st.session_state.grid_verbs = verbs_df.sample(20).reset_index(drop=True)
