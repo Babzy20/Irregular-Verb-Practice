@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import random
 
 # Load the list of irregular verbs
 @st.cache_data
@@ -100,21 +101,26 @@ st.title("📚 Irregular Verbs Practice")
 
 st.markdown("""
     <style>
-    [data-testid="stSidebar"] {
-        min-width: 400px;
-        max-width: 400px;
-        overflow-x: auto;
+    .shake {
+        animation: shake 0.5s;
+        animation-iteration-count: 1;
     }
-    .element-container table {
-        width: 100% !important;
-    }
-    .element-container th, .element-container td {
-        word-wrap: break-word;
-        white-space: normal;
+
+    @keyframes shake {
+        0% { transform: translate(1px, 1px) rotate(0deg); }
+        10% { transform: translate(-1px, -2px) rotate(-1deg); }
+        20% { transform: translate(-3px, 0px) rotate(1deg); }
+        30% { transform: translate(3px, 2px) rotate(0deg); }
+        40% { transform: translate(1px, -1px) rotate(1deg); }
+        50% { transform: translate(-1px, 2px) rotate(-1deg); }
+        60% { transform: translate(-3px, 1px) rotate(0deg); }
+        70% { transform: translate(3px, 1px) rotate(-1deg); }
+        80% { transform: translate(-1px, -1px) rotate(1deg); }
+        90% { transform: translate(1px, 2px) rotate(0deg); }
+        100% { transform: translate(1px, -2px) rotate(-1deg); }
     }
     </style>
 """, unsafe_allow_html=True)
-
 
 # Mode selection
 mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_selector")
@@ -163,8 +169,6 @@ elif mode == "Grid Mode":
         st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
 
     user_inputs = []
-    show_answers = False
-
     st.write("### Fill in the forms:")
     for i, row in st.session_state.grid_verbs.iterrows():
         col1, col2, col3, col4 = st.columns([2, 1.5, 1.5, 2])
@@ -175,7 +179,7 @@ elif mode == "Grid Mode":
         with col3:
             past_participle = st.text_input("", key=f"pp_{i}", placeholder="Past Participle", label_visibility="collapsed")
         with col4:
-            if show_answers:
+            if st.session_state.get(f"show_answers_{i}", False):
                 is_correct, correct = check_answers(row['Base Form'], simple_past, past_participle)
                 if is_correct:
                     st.success("✓")
@@ -184,28 +188,29 @@ elif mode == "Grid Mode":
         user_inputs.append((row['Base Form'], simple_past, past_participle))
 
     if st.button("🔍 Check All"):
-        show_answers = True
-        st.session_state.attempts += 10
-        correct_count = 0
         for i, (base_form, simple_past, past_participle) in enumerate(user_inputs):
+            st.session_state[f"show_answers_{i}"] = True
+            st.session_state.attempts += 1
             is_correct, correct = check_answers(base_form, simple_past, past_participle)
             if is_correct:
-                correct_count += 1
-                st.success(f"{base_form}: ✓")
+                st.session_state.score += 1
+                st.session_state.streak += 1
             else:
-                st.error(f"{base_form}: {correct['Simple Past']}, {correct['Past Participle']}")
-        st.session_state.score += correct_count
-        st.session_state.streak += correct_count
+                st.session_state.streak = 0
+                new_reminders = check_reminders(base_form, simple_past, past_participle)
+                if new_reminders:
+                    for reminder in new_reminders:
+                        st.toast(f"😬 Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
         new_badges = check_badges(st.session_state.streak)
         if new_badges:
             st.balloons()
             for badge in new_badges:
                 st.toast(f"🎉 New Badge Earned: {badge['emoji']} {badge['name']} - {badge['description']}")
-        if correct_count < 10:
-            st.session_state.streak = 0
 
     if st.button("🆕 New Verbs"):
         st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
+        for i in range(10):
+            st.session_state[f"show_answers_{i}"] = False
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
     if st.session_state.attempts > 0:
@@ -220,18 +225,16 @@ if st.button("🔁 Reset Score"):
     st.session_state.mistakes = []
     st.session_state.reminders = []
 
-# Display badge board in sidebar
-with st.sidebar:
-    st.header("🏅 Achievements")
+# Display badge board in expander
+with st.expander("🏅 Achievements"):
     badge_table = []
     for badge in badges:
         status = "✅ Earned" if badge["name"] in st.session_state.badges else "🔒 Locked"
         badge_table.append([badge["emoji"], badge["name"], badge["description"], status])
     st.table(pd.DataFrame(badge_table, columns=["Icon", "Badge Name", "Description", "Status"]))
 
-# Display reminders board in sidebar
-with st.sidebar:
-    st.header("😬 Reminders: Learn from Your Mistakes")
+# Display reminders board in expander
+with st.expander("😬 Reminders: Learn from Your Mistakes"):
     reminder_table = []
     for reminder in reminders:
         if reminder["name"] in st.session_state.reminders:
