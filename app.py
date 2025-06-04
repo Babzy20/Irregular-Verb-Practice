@@ -194,7 +194,9 @@ st.table(pd.DataFrame(badge_table, columns=["Icon", "Badge Name", "Description",
 st.header("😬 Reminders: Learn from Your Mistakes")
 reminder_table = []
 for reminder in reminders:
-    status = "✅ Earned" if reminder["name"] in st.session_state.reminders else "🔒 Locked"
-    reminder_table.append([reminder["emoji"], reminder["name"], reminder["description"], status])
-
+    earned = reminder["name"] in st.session_state.reminders
+    status = "✅ Earned" if earned else "🔒 Locked"
+    description = reminder["description"] if earned else ""
+    reminder_table.append([reminder["emoji"], reminder["name"], description, status])
 st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Description", "Status"]))
+
