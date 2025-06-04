@@ -193,10 +193,19 @@ st.table(pd.DataFrame(badge_table, columns=["Icon", "Badge Name", "Description",
 # Display reminders board
 st.header("😬 Reminders: Learn from Your Mistakes")
 reminder_table = []
+
 for reminder in reminders:
-    earned = reminder["name"] in st.session_state.reminders
-    status = "✅ Earned" if earned else "🔒 Locked"
-    description = reminder["description"] if earned else ""
-    reminder_table.append([reminder["emoji"], reminder["name"], description, status])
-st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Description", "Status"]))
+    if reminder["name"] in st.session_state.reminders:
+        # Show full info only if earned
+        reminder_table.append([reminder["emoji"], reminder["name"], reminder["description"], "✅ Earned"])
+    else:
+        # Hide description entirely
+        reminder_table.append([reminder["emoji"], reminder["name"], "🔒 Locked"])
+
+# Dynamically set columns based on whether descriptions are shown
+if any(r["name"] in st.session_state.reminders for r in reminders):
+    st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Description", "Status"]))
+else:
+    st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Status"]))
+
 
