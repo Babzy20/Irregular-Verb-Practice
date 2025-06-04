@@ -1,103 +1,21 @@
 import streamlit as st
 import pandas as pd
 
-# Load the list of irregular verbs
-@st.cache_data
-def load_verbs():
-    return pd.read_csv('verbs.csv')
-
-verbs_df = load_verbs()
-
-# Function to check answers
-def check_answers(base_form, simple_past, past_participle):
-    correct = verbs_df[verbs_df['Base Form'] == base_form].iloc[0]
-    return (
-        simple_past.strip().lower() == correct['Simple Past'].strip().lower() and
-        past_participle.strip().lower() == correct['Past Participle'].strip().lower()
-    ), correct
+# Define reminders
+reminders = [
+    {"emoji": "🔍", "name": "Check your answers", "description": "Always review your answers before submitting."},
+    {"emoji": "📝", "name": "Practice regularly", "description": "Consistency is key to mastering irregular verbs."},
+    {"emoji": "📚", "name": "Use resources", "description": "Utilize available resources to improve your learning."},
+]
 
 # Initialize session state
-if 'current_verb' not in st.session_state:
-    st.session_state.current_verb = verbs_df.sample(1).iloc[0]
-if 'score' not in st.session_state:
-    st.session_state.score = 0
-if 'attempts' not in st.session_state:
-    st.session_state.attempts = 0
-if 'streak' not in st.session_state:
-    st.session_state.streak = 0
-if 'badges' not in st.session_state:
-    st.session_state.badges = []
-if 'mistakes' not in st.session_state:
-    st.session_state.mistakes = []
 if 'reminders' not in st.session_state:
     st.session_state.reminders = []
 
-# Define badges
-badges = [
-    {"name": "No more a novice!", "emoji": "🙌", "trigger": 1, "description": "You got your first one right!"},
-    {"name": "Five star!", "emoji": "⭐⭐⭐⭐⭐", "trigger": 5, "description": "You're on a roll! 5 in a row!"},
-    {"name": "As great as ninTENdo", "emoji": "😅", "trigger": 10, "description": "10 in a row? You're a legend!"}
-]
+# Title
+st.title("Irregular Verb Practice")
 
-# Define reminders
-reminders = [
-    {"name": "You have fallen for it", "emoji": "🪂", "trigger": "feel_fall", "description": "Confused forms of feel and fall"},
-    {"name": "Learn how to write", "emoji": "✏️", "trigger": "writting_writen", "description": "Wrote 'writting' or 'writen'"},
-    {"name": "You just got caught!", "emoji": "🕵️‍♂️", "trigger": "catched", "description": "Wrote 'catched'"},
-    {"name": "Think it through or we'll teach you a lesson!", "emoji": "🧠", "trigger": "teach_think", "description": "Confused forms of teach and think"},
-    {"name": "When times are tough", "emoji": "🍦", "trigger": "5_mistakes_in_a_row", "description": "5 mistakes in a row"},
-    {"name": "Fool me twice, shame on me!", "emoji": "😤", "trigger": "repeat_mistake", "description": "Made the same mistake twice in the same session"}
-]
-
-# Function to check and award badges
-def check_badges(streak):
-    new_badges = []
-    for badge in badges:
-        if streak >= badge["trigger"] and badge["name"] not in st.session_state.badges:
-            st.session_state.badges.append(badge["name"])
-            new_badges.append(badge)
-    return new_badges
-
-# Function to check and award reminders
-def check_reminders(base_form, simple_past, past_participle):
-    new_reminders = []
-    mistake = {"base_form": base_form, "simple_past": simple_past, "past_participle": past_participle}
-    st.session_state.mistakes.append(mistake)
-
-    for reminder in reminders:
-        if reminder["trigger"] == "feel_fall" and (simple_past.lower() in ["fell", "felt"] or past_participle.lower() in ["fallen", "felt"]):
-            if reminder["name"] not in st.session_state.reminders:
-                st.session_state.reminders.append(reminder["name"])
-                new_reminders.append(reminder)
-        elif reminder["trigger"] == "writting_writen" and (simple_past.lower() == "writting" or past_participle.lower() == "writen"):
-            if reminder["name"] not in st.session_state.reminders:
-                st.session_state.reminders.append(reminder["name"])
-                new_reminders.append(reminder)
-        elif reminder["trigger"] == "catched" and (     
-            simple_past.strip().lower() == "catched" or past_participle.strip().lower() == 
-            "catched"
-        ):
-            
-            if reminder["name"] not in st.session_state.reminders:
-                st.session_state.reminders.append(reminder["name"])
-                new_reminders.append(reminder)
-        elif reminder["trigger"] == "teach_think" and (simple_past.lower() in ["taught", "thought"] or past_participle.lower() in ["taught", "thought"]):
-            if reminder["name"] not in st.session_state.reminders:
-                st.session_state.reminders.append(reminder["name"])
-                new_reminders.append(reminder)
-        elif reminder["trigger"] == "5_mistakes_in_a_row" and len(st.session_state.mistakes) >= 5 and all(m["simple_past"] == "" or m["past_participle"] == "" for m in st.session_state.mistakes[-5:]):
-            if reminder["name"] not in st.session_state.reminders:
-                st.session_state.reminders.append(reminder["name"])
-                new_reminders.append(reminder)
-        elif reminder["trigger"] == "repeat_mistake" and st.session_state.mistakes.count(mistake) > 1:
-            if reminder["name"] not in st.session_state.reminders:
-                st.session_state.reminders.append(reminder["name"])
-                new_reminders.append(reminder)
-    return new_reminders
-
-# App title
-st.title("📚 Irregular Verbs Practice")
-
+# CSS for shake animation
 st.markdown("""
     <style>
     .shake {
@@ -109,7 +27,7 @@ st.markdown("""
         0% { transform: translate(1px, 1px) rotate(0deg); }
         10% { transform: translate(-1px, -2px) rotate(-1deg); }
         20% { transform: translate(-3px, 0px) rotate(1deg); }
-        translate(3px, 2px) rotate(0deg); }
+        30% { transform: translate(3px, 2px) rotate(0deg); }
         40% { transform: translate(1px, -1px) rotate(1deg); }
         50% { transform: translate(-1px, 2px) rotate(-1deg); }
         60% { transform: translate(-3px, 1px) rotate(0deg); }
@@ -118,103 +36,8 @@ st.markdown("""
         90% { transform: translate(1px, 2px) rotate(0deg); }
         100% { transform: translate(1px, -2px) rotate(-1deg); }
     }
-   _html=True)
-
-# Mode selection
-mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_selector")
-
-if mode == "Single Verb Quiz":
-    st.header("🎯 Single Verb Quiz")
-
-    if st.button("🔄 New Verb"):
-        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
-
-    verb = st.session_state.current_verb
-    st.write(f"Base Form: **{verb['Base Form']}**")
-
-    simple_past = st.text_input("Enter the Simple Past form:", key="single_sp")
-    past_participle = st.text_input("Enter the Past Participle form:", key="single_pp")
-
-    if st.button("✅ Submit"):
-        st.session_state.attempts += 1
-        is_correct, correct = check_answers(verb['Base Form'], simple_past, past_participle)
-        if is_correct:
-            st.session_state.score += 1
-            st.session_state.streak += 1
-            st.success("Correct! Well done!")
-            new_badges = check_badges(st.session_state.streak)
-            if new_badges:
-                st.balloons()
-                for badge in new_badges:
-                    st.toast(f"🎉 New Badge Earned: {badge['emoji']} {badge['name']} - {badge['description']}")
-        else:
-            st.session_state.streak = 0
-            st.markdown('<div class="shake"><p style="color:red; font-weight:bold;">❌ Incorrect!</p></div>', unsafe_allow_html=True)
-            st.info(f"Correct forms: Simple Past - {correct['Simple Past']}, Past Participle - {correct['Past Participle']}")
-            new_reminders = check_reminders(verb['Base Form'], simple_past, past_participle)
-            if new_reminders:
-                for reminder in new_reminders:
-                    st.toast(f"😬 Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
-
-    st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
-    if st.session_state.attempts > 0:
-        accuracy = (st.session_state.score / st.session_state.attempts) * 100
-        st.write(f"Accuracy: {accuracy:.2f}%")
-
-elif mode == "Grid Mode":
-    st.header("🧩 Grid Mode")
-    if "grid_verbs" not in st.session_state:
-        st.session_state.grid_verbs = verbs_df.sample(20).reset_index(drop=True)
-
-    user_inputs = []
-    show_answers = st.button("🔍 Check All")
-
-    st.write("### Fill in the forms:")
-    for i, row in st.session_state.grid_verbs.iterrows():
-        col1, col2, col3, col4 = st.columns([2, 1.5, 1.5, 2])
-        with col1:
-            st.markdown(f"**{row['Base Form']}**")
-        with col2:
-            simple_past = st.text_input("", key=f"sp_{i}", placeholder="Simple Past", label_visibility="collapsed")
-        with col3:
-            past_participle = st.text_input("", key=f"pp_{i}", placeholder="Past Participle", label_visibility="collapsed")
-        with col4:
-            if show_answers:
-                is_correct, correct = check_answers(row['Base Form'], simple_past, past_participle)
-                if is_correct:
-                    st.success("✓")
-                else:
-                    st.markdown(f'''
-    <div class="shake">
-        < style="color:red; font-weight:bold;">❌ {correct['Simple Past']}, {correct['Past Participle']}</p>
-    </div>
-''', unsafe_allow_html=True)
-
-
-    if st.button("🆕 New Verbs"):
-        st.session_state.grid_verbs = verbs_df.sample(20).reset_index(drop=True)
-
-    st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
-    if st.session_state.attempts > 0:
-        accuracy = (st.session_state.score / st.session_state.attempts) * 100
-        st.write(f"Accuracy: {accuracy:.2f}%")
-
-if st.button("🔁 Reset Score"):
-    st.session_state.score = 0
-    st.session_state.attempts = 0
-    st.session_state.streak = 0
-    st.session_state.badges = []
-    st.session_state.mistakes = []
-    st.session_state.reminders = []
-
-# Display badge board
-st.header("🏅 Achievements")
-badge_table = []
-for badge in badges:
-    status = "✅ Earned" if badge["name"] in st.session_state.badges else "🔒 Locked"
-    badge_table.append([badge["emoji"], badge["name"], badge["description"], status])
-
-st.table(pd.DataFrame(badge_table, columns=["Icon", "Badge Name", "Description", "Status"]))
+    </style>
+""", unsafe_allow_html=True)
 
 # Display reminders board
 st.header("😬 Reminders: Learn from Your Mistakes")
@@ -234,4 +57,62 @@ if any(r["name"] in st.session_state.reminders for r in reminders):
 else:
     st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Status"]))
 
+# Single Verb Quiz
+st.header("Single Verb Quiz")
+verb = st.selectbox("Choose a verb", ["be", "have", "do", "say", "go", "get", "make", "know", "think"])
+simple_past = st.text_input("Simple Past")
+past_participle = st.text_input("Past Participle")
+
+if st.button("✅ Submit"):
+    correct = {"be": {"Simple Past": "was/were", "Past Participle": "been"},
+               "have": {"Simple Past": "had", "Past Participle": "had"},
+               "do": {"Simple Past": "did", "Past Participle": "done"},
+               "say": {"Simple Past": "said", "Past Participle": "said"},
+               "go": {"Simple Past": "went", "Past Participle": "gone"},
+               "get": {"Simple Past": "got", "Past Participle": "gotten"},
+               "make": {"Simple Past": "made", "Past Participle": "made"},
+               "know": {"Simple Past": "knew", "Past Participle": "known"},
+               "think": {"Simple Past": "thought", "Past Participle": "thought"}}
+
+    if simple_past == correct[verb]["Simple Past"] and past_participle == correct[verb]["Past Participle"]:
+        st.success("Correct!")
+        st.session_state.streak += 1
+    else:
+        st.session_state.streak = 0
+        st.markdown('<div class="shake"><p style="color:red; font-weight:bold;">❌ Incorrect!</p></div>', unsafe_allow_html=True)
+        st.info(f"Correct forms: Simple Past - {correct[verb]['Simple Past']}, Past Participle - {correct[verb]['Past Participle']}")
+
+# Grid Mode
+st.header("Grid Mode")
+verbs = ["be", "have", "do", "say", "go", "get", "make", "know", "think"]
+simple_pasts = [st.text_input(f"{verb} - Simple Past") for verb in verbs]
+past_participles = [st.text_input(f"{verb} - Past Participle") for verb in verbs]
+
+if st.button("✅ Submit Grid"):
+    correct = {"be": {"Simple Past": "was/were", "Past Participle": "been"},
+               "have": {"Simple Past": "had", "Past Participle": "had"},
+               "do": {"Simple Past": "did", "Past Participle": "done"},
+               "say": {"Simple Past": "said", "Past Participle": "said"},
+               "go": {"Simple Past": "went", "Past Participle": "gone"},
+               "get": {"Simple Past": "got", "Past Participle": "gotten"},
+               "make": {"Simple Past": "made", "Past Participle": "made"},
+               "know": {"Simple Past": "knew", "Past Participle": "known"},
+               "think": {"Simple Past": "thought", "Past Participle": "thought"}}
+
+    for i, verb in enumerate(verbs):
+        is_correct = simple_pasts[i] == correct[verb]["Simple Past"] and past_participles[i] == correct[verb]["Past Participle"]
+        if is_correct:
+            st.success(f"{verb}: Correct!")
+        else:
+            st.markdown(f'''
+                <div class="shake">
+                    <p style="color:red; font-weight:bold;">❌ {verb}: {correct[verb]['Simple Past']}, {correct[verb]['Past Participle']}</p>
+                </div>
+            ''', unsafe_allow_html=True)
+
+# Save the updated code to a new file
+with open('app_updated.py', 'w') as file:
+    file.write(updated_code)
+
+print("The updated 'app_updated.py' file has been created successfully.")
 
