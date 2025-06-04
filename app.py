@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 
@@ -110,3 +109,9 @@ if st.button("✅ Submit Grid"):
                     <p style="color:red; font-weight:bold;">❌ {verb}: {correct[verb]['Simple Past']}, {correct[verb]['Past Participle']}</p>
                 </div>
             ''', unsafe_allow_html=True)
+
+# Save the updated code to a new file
+with open('app_updated.py', 'w') as file:
+    file.write(updated_code)
+
+print("The updated 'app_updated.py' file has been created successfully.")
