@@ -100,31 +100,21 @@ st.title("📚 Irregular Verbs Practice")
 
 st.markdown("""
     <style>
-    .shake {
-        animation: shake 0.5s;
-        animation-iteration-count: 1;
+    [data-testid="stSidebar"] {
+        min-width: 400px;
+        max-width: 400px;
+        overflow-x: auto;
     }
-
-    @keyframes shake {
-        0% { transform: translate(1px, 1px) rotate(0deg); }
-        10% { transform: translate(-1px, -2px) rotate(-1deg); }
-        20% { transform: translate(-3px, 0px) rotate(1deg); }
-        30% { transform: translate(3px, 2px) rotate(0deg); }
-        40% { transform: translate(1px, -1px) rotate(1deg); }
-        50% { transform: translate(-1px, 2px) rotate(-1deg); }
-        60% { transform: translate(-3px, 1px) rotate(0deg); }
-        70% { transform: translate(3px, 1px) rotate(-1deg); }
-        80% { transform: translate(-1px, -1px) rotate(1deg); }
-        90% { transform: translate(1px, 2px) rotate(0deg); }
-        100% { transform: translate(1px, -2px) rotate(-1deg); }
+    .element-container table {
+        width: 100% !important;
     }
-    </style>
-    <style>
-    [data-testid="stSidebar"][aria-expanded="true"] > div:first-child {
-        width: 400px;
+    .element-container th, .element-container td {
+        word-wrap: break-word;
+        white-space: normal;
     }
     </style>
 """, unsafe_allow_html=True)
+
 
 # Mode selection
 mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_selector")
