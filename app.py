@@ -73,7 +73,11 @@ def check_reminders(base_form, simple_past, past_participle):
             if reminder["name"] not in st.session_state.reminders:
                 st.session_state.reminders.append(reminder["name"])
                 new_reminders.append(reminder)
-        elif reminder["trigger"] == "catched" and (simple_past.strip().lower() == "catched" or past_participle.strip().lower() == "catched"):
+        elif reminder["trigger"] == "catched" and (     
+            simple_past.strip().lower() == "catched" or past_participle.strip().lower() == 
+            "catched"
+        ):
+            
             if reminder["name"] not in st.session_state.reminders:
                 st.session_state.reminders.append(reminder["name"])
                 new_reminders.append(reminder)
@@ -113,6 +117,11 @@ st.markdown("""
         80% { transform: translate(-1px, -1px) rotate(1deg); }
         90% { transform: translate(1px, 2px) rotate(0deg); }
         100% { transform: translate(1px, -2px) rotate(-1deg); }
+    }
+    </style>
+    <style>
+    .sidebar .sidebar-content {
+        width: 400px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -180,8 +189,22 @@ elif mode == "Grid Mode":
                 is_correct, correct = check_answers(row['Base Form'], simple_past, past_participle)
                 if is_correct:
                     st.success("✓")
+                    st.session_state.score += 1
+                    st.session_state.streak += 1
                 else:
                     st.error(f"{correct['Simple Past']}, {correct['Past Participle']}")
+                    st.session_state.streak = 0
+                st.session_state.attempts += 1
+                new_badges = check_badges(st.session_state.streak)
+                if new_badges:
+                    st.balloons()
+                    for badge in new_badges:
+                        st.toast(f"🎉 New Badge Earned: {badge['emoji']} {badge['name']} - {badge['description']}")
+                new_reminders = check_reminders(row['Base Form'], simple_past, past_participle)
+                if new_reminders:
+                    for reminder in new_reminders:
+                        st.toast(f"😬 Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
+
         user_inputs.append((row['Base Form'], simple_past, past_participle))
 
     if st.button("🆕 New Verbs"):
