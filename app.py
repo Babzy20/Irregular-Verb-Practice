@@ -73,11 +73,7 @@ def check_reminders(base_form, simple_past, past_participle):
             if reminder["name"] not in st.session_state.reminders:
                 st.session_state.reminders.append(reminder["name"])
                 new_reminders.append(reminder)
-        elif reminder["trigger"] == "catched" and (     
-            simple_past.strip().lower() == "catched" or past_participle.strip().lower() == 
-            "catched"
-        ):
-            
+        elif reminder["trigger"] == "catched" and (simple_past.strip().lower() == "catched" or past_participle.strip().lower() == "catched"):
             if reminder["name"] not in st.session_state.reminders:
                 st.session_state.reminders.append(reminder["name"])
                 new_reminders.append(reminder)
@@ -204,29 +200,26 @@ if st.button("🔁 Reset Score"):
     st.session_state.mistakes = []
     st.session_state.reminders = []
 
-# Display badge board
-st.header("🏅 Achievements")
-badge_table = []
-for badge in badges:
-    status = "✅ Earned" if badge["name"] in st.session_state.badges else "🔒 Locked"
-    badge_table.append([badge["emoji"], badge["name"], badge["description"], status])
+# Display badge board in sidebar
+with st.sidebar:
+    st.header("🏅 Achievements")
+    badge_table = []
+    for badge in badges:
+        status = "✅ Earned" if badge["name"] in st.session_state.badges else "🔒 Locked"
+        badge_table.append([badge["emoji"], badge["name"], badge["description"], status])
+    st.table(pd.DataFrame(badge_table, columns=["Icon", "Badge Name", "Description", "Status"]))
 
-st.table(pd.DataFrame(badge_table, columns=["Icon", "Badge Name", "Description", "Status"]))
-
-# Display reminders board
-st.header("😬 Reminders: Learn from Your Mistakes")
-reminder_table = []
-
-for reminder in reminders:
-    if reminder["name"] in st.session_state.reminders:
-        # Show full info only if earned
-        reminder_table.append([reminder["emoji"], reminder["name"], reminder["description"], "✅ Earned"])
+# Display reminders board in sidebar
+with st.sidebar:
+    st.header("😬 Reminders: Learn from Your Mistakes")
+    reminder_table = []
+    for reminder in reminders:
+        if reminder["name"] in st.session_state.reminders:
+            reminder_table.append([reminder["emoji"], reminder["name"], reminder["description"], "✅ Earned"])
+        else:
+            reminder_table.append([reminder["emoji"], reminder["name"], "🔒 Locked"])
+    if any(r["name"] in st.session_state.reminders for r in reminders):
+        st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Description", "Status"]))
     else:
-        # Hide description entirely
-        reminder_table.append([reminder["emoji"], reminder["name"], "🔒 Locked"])
+        st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Status"]))
 
-# Dynamically set columns based on whether descriptions are shown
-if any(r["name"] in st.session_state.reminders for r in reminders):
-    st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Description", "Status"]))
-else:
-    st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Status"]))
