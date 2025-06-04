@@ -4,7 +4,7 @@ import pandas as pd
 # Load the list of irregular verbs
 @st.cache_data
 def load_verbs():
-    return pd.read_csv('verbs.csv')
+    return pd.read_csv('verbs 1.csv')
 
 verbs_df = load_verbs()
 
@@ -89,8 +89,9 @@ def check_reminders(base_form, simple_past, past_participle):
             if reminder["name"] not in st.session_state.reminders:
                 st.session_state.reminders.append(reminder["name"])
                 new_reminders.append(reminder)
-        elif reminder["trigger"] == "repeat_mistake" and st.session_state.mistakes.count(mistake) > 1:
-            if reminder["name"] not in st.session_state.reminders:
+        elif reminder["trigger"] == "repeat_mistake":
+            count = sum(1 for m in st.session_state.mistakes if m == mistake)
+            if count > 1 and reminder["name"] not in st.session_state.reminders:
                 st.session_state.reminders.append(reminder["name"])
                 new_reminders.append(reminder)
     return new_reminders
@@ -142,7 +143,7 @@ if mode == "Single Verb Quiz":
 elif mode == "Grid Mode":
     st.header("🧩 Grid Mode")
     if "grid_verbs" not in st.session_state:
-        st.session_state.grid_verbs = verbs_df.sample(20).reset_index(drop=True)
+        st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
 
     user_inputs = []
     show_answers = st.button("🔍 Check All")
@@ -160,13 +161,13 @@ elif mode == "Grid Mode":
             if show_answers:
                 is_correct, correct = check_answers(row['Base Form'], simple_past, past_participle)
                 if is_correct:
-                    st.success("✓")
+                    st.success("✔")
                 else:
                     st.error(f"{correct['Simple Past']}, {correct['Past Participle']}")
         user_inputs.append((row['Base Form'], simple_past, past_participle))
 
     if st.button("🆕 New Verbs"):
-        st.session_state.grid_verbs = verbs_df.sample(20).reset_index(drop=True)
+        st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
     if st.session_state.attempts > 0:
@@ -186,7 +187,7 @@ st.header("🏅 Achievements")
 badge_table = []
 for badge in badges:
     status = "✅ Earned" if badge["name"] in st.session_state.badges else "🔒 Locked"
-    badge_table.append([badge["emoji"], badge["name"], badge["description"], status])
+    badge_table.append([badge["emoji"], badge["name"], badge["description"] if status == "✅ Earned" else "", status])
 
 st.table(pd.DataFrame(badge_table, columns=["Icon", "Badge Name", "Description", "Status"]))
 
@@ -195,7 +196,7 @@ st.header("😬 Reminders: Learn from Your Mistakes")
 reminder_table = []
 for reminder in reminders:
     status = "✅ Earned" if reminder["name"] in st.session_state.reminders else "🔒 Locked"
-    reminder_table.append([reminder["emoji"], reminder["name"], reminder["description"], status])
+    reminder_table.append([reminder["emoji"], reminder["name"], reminder["description"] if status == "✅ Earned" else "", status])
 
 st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Description", "Status"]))
 
