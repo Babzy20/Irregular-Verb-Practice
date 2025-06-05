@@ -121,6 +121,7 @@ if mode == "Single Verb Quiz":
 
 elif mode == "Grid Mode":
     st.header("🧩 Grid Mode")
+
     if "grid_verbs" not in st.session_state:
         st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
 
@@ -143,10 +144,35 @@ elif mode == "Grid Mode":
                 is_correct, correct = result
                 if is_correct:
                     st.success("✓")
+                else:
+                    st.error(f"{correct['Simple Past']}, {correct['Past Participle']}")
+        user_inputs.append((row['Base Form'], sp, pp))
+
+    if st.button("🔍 Check All"):
+        for i, (base_form, sp, pp) in enumerate(user_inputs):
+            is_correct, correct = check_answers(base_form, sp, pp)
+            st.session_state.grid_results[i] = (is_correct, correct)
+            st.session_state.attempts += 1
+            if is_correct:
+                st.session_state.score += 1
+                st.session_state.streak += 1
             else:
-                st.error(f"{correct['Simple Past']}, {correct['Past Participle']}")
-                
-            user_inputs.append((row['Base Form'], sp, pp))
+                st.session_state.streak = 0
+            new_reminders = check_reminders(base_form, sp, pp)
+            for reminder in new_reminders:
+                st.toast(f"⚠️ Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
+        new_badges = check_badges(st.session_state.streak)
+        for badge in new_badges:
+            st.toast(f"🎉 New Badge: {badge['emoji']} {badge['name']} - {badge['description']}")
+
+    if st.button("🆕 New Verbs"):
+        st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
+        st.session_state.grid_results = [None] * len(st.session_state.grid_verbs)
+
+    st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
+    if st.session_state.attempts > 0:
+        accuracy = (st.session_state.score / st.session_state.attempts) * 100
+        st.write(f"Accuracy: {accuracy:.2f}%")
 
 if st.button("🔍 Check All"):
     for i, (base_form, sp, pp) in enumerate(user_inputs):
