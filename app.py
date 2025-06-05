@@ -121,7 +121,7 @@ if mode == "Single Verb Quiz":
 
 elif mode == "Grid Mode":
     st.header("🧩 Grid Mode")
-   if "grid_verbs" not in st.session_state:
+    if "grid_verbs" not in st.session_state:
     st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
 
 if "grid_results" not in st.session_state:
