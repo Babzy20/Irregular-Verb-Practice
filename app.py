@@ -136,9 +136,9 @@ elif mode == "Grid Mode":
         with col2:
             sp = st.text_input("", key=f"sp_{i}", placeholder="Simple Past", label_visibility="collapsed")
         with col3:
-        pp = st.text_input("", key=f"pp_{i}", placeholder="Past Participle", label_visibility="collapsed")
+            pp = st.text_input("", key=f"pp_{i}", placeholder="Past Participle", label_visibility="collapsed")
         with col4:
-           result = st.session_state.grid_results[i]
+            result = st.session_state.grid_results[i]
             if result is not None:
                 is_correct, correct = result
                 if is_correct:
