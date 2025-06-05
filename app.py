@@ -36,13 +36,13 @@ if 'reminders' not in st.session_state:
 badges = [
     {"name": "No more a novice!", "emoji": "🙌", "trigger": 1, "description": "You got your first one right!"},
     {"name": "Five star!", "emoji": "⭐⭐⭐⭐⭐", "trigger": 5, "description": "You're on a roll! 5 in a row!"},
-    {"name": "As great as ninTENdo", "emoji": "😅", "trigger": 10, "description": "10 in a row? You're a legend!"}
+    {"name": "As great as ninTENdo", "emoji": "😅", "trigger": 10, "description": "10 in a row? Let's go!"}
 ]
 
 # Define reminders
 reminders = [
     {"name": "You have fallen for it", "emoji": "🪂", "trigger": "feel_fall", "description": "Confused forms of feel and fall"},
-    {"name": "Learn how to write", "emoji": "✏️", "trigger": "writting_writen", "description": "Wrote 'writting' or 'writen'"},
+    {"name": "Learn how to write", "emoji": "✏️", "trigger": "wrotte_writen", "description": "'Written' is the only form with 2 Ts"},
     {"name": "You just got caught!", "emoji": "🕵️‍♂️", "trigger": "catched", "description": "Wrote 'catched'"},
     {"name": "Think it through or we'll teach you a lesson!", "emoji": "🧠", "trigger": "teach_think", "description": "Confused forms of teach and think"},
     {"name": "When times are tough", "emoji": "🍦", "trigger": "5_mistakes_in_a_row", "description": "5 mistakes in a row"},
