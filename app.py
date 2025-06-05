@@ -145,7 +145,7 @@ elif mode == "Grid Mode":
                     st.success("✓")
             else:
                 st.error(f"{correct['Simple Past']}, {correct['Past Participle']}")
-        user_inputs.append((row['Base Form'], sp, pp))
+                user_inputs.append((row['Base Form'], sp, pp))
 
 if st.button("🔍 Check All"):
     for i, (base_form, sp, pp) in enumerate(user_inputs):
