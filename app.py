@@ -21,7 +21,7 @@ def get_reminder(trigger):
 def main():
     st.title("Irregular Verb Practice App")
 
-mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_selector")
+    mode = st.sidebar.selectbox("Choose Mode", ["Single Verb Quiz", "Grid Mode"])
 
     if mode == "Single Verb Quiz":
         st.header("Single Verb Quiz")
@@ -50,38 +50,14 @@ mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_s
         st.header("Grid Mode")
         grid_verbs = verbs_df.sample(10)
         user_inputs = {}
-st.write("### Fill in the forms:")
-for i, row in grid_verbs.iterrows():
-    col1, col2, col3, col4 = st.columns([2, 1.5, 1.5, 2])
-    with col1:
-        st.markdown(f"**{row["Base Form"]}**")
-    with col2:
-        simple_past = st.text_input("", key=f"sp_{i}", placeholder="Simple Past", label_visibility="collapsed")
-    with col3:
-        past_participle = st.text_input("", key=f"pp_{i}", placeholder="Past Participle", label_visibility="collapsed")
-    user_inputs[row["Base Form"]] = {
-        "simple_past": simple_past,
-        "past_participle": past_participle
-    }
+        for index, row in grid_verbs.iterrows():
             user_inputs[row['Base Form']] = {
                 'simple_past': st.text_input(f"{row['Base Form']} - Simple Past"),
                 'past_participle': st.text_input(f"{row['Base Form']} - Past Participle")
             }
 
         if st.button("Check All"):
-st.write("### Fill in the forms:")
-for i, row in grid_verbs.iterrows():
-    col1, col2, col3, col4 = st.columns([2, 1.5, 1.5, 2])
-    with col1:
-        st.markdown(f"**{row["Base Form"]}**")
-    with col2:
-        simple_past = st.text_input("", key=f"sp_{i}", placeholder="Simple Past", label_visibility="collapsed")
-    with col3:
-        past_participle = st.text_input("", key=f"pp_{i}", placeholder="Past Participle", label_visibility="collapsed")
-    user_inputs[row["Base Form"]] = {
-        "simple_past": simple_past,
-        "past_participle": past_participle
-    }
+            for index, row in grid_verbs.iterrows():
                 correct_simple_past = row['Simple Past']
                 correct_past_participle = row['Past Participle']
                 user_simple_past = user_inputs[row['Base Form']]['simple_past']
