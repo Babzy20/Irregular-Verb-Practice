@@ -1,96 +1,110 @@
 import streamlit as st
 import pandas as pd
 
-# Load the list of irregular verbs
-@st.cache_data
-def load_verbs():
-    return pd.read_csv('verbs.csv')
+# Load verbs data
+verbs = pd.read_csv('verbs.csv')
 
-verbs_df = load_verbs()
-
-# Function to check answers
-def check_answers(base_form, simple_past, past_participle):
-    correct = verbs_df[verbs_df['Base Form'] == base_form].iloc[0]
-    return (
-        simple_past.strip().lower() == correct['Simple Past'].strip().lower() and
-        past_participle.strip().lower() == correct['Past Participle'].strip().lower()
-    ), correct
+# Load achievements and reminders data
+achievements = pd.read_csv('achievements.csv')
+reminders = pd.read_csv('reminders.csv')
 
 # Initialize session state variables
-if 'current_verb' not in st.session_state:
-    st.session_state.current_verb = verbs_df.sample(1).iloc[0]
 if 'score' not in st.session_state:
     st.session_state.score = 0
 if 'attempts' not in st.session_state:
     st.session_state.attempts = 0
+if 'streak' not in st.session_state:
+    st.session_state.streak = 0
+if 'badges' not in st.session_state:
+    st.session_state.badges = []
+if 'reminders' not in st.session_state:
+    st.session_state.reminders = []
 
-# App title
-st.title("📚 Irregular Verbs Practice")
-
-# Mode selection
-mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_selector")
-
-if mode == "Single Verb Quiz":
-    st.header("🎯 Single Verb Quiz")
-
-    if st.button("🔄 New Verb"):
-        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
-
-    verb = st.session_state.current_verb
-    st.write(f"Base Form: **{verb['Base Form']}**")
-
-    simple_past = st.text_input("Enter the Simple Past form:", key="single_sp")
-    past_participle = st.text_input("Enter the Past Participle form:", key="single_pp")
-
-    if st.button("✅ Submit"):
+# Function to check answers and update score
+def check_answers(base_form, simple_past, past_participle):
+    correct = verbs[(verbs['Base Form'] == base_form) & 
+                    (verbs['Simple Past'] == simple_past) & 
+                    (verbs['Past Participle'] == past_participle)]
+    if not correct.empty:
+        st.session_state.score += 1
+        st.session_state.streak += 1
         st.session_state.attempts += 1
-        is_correct, correct = check_answers(verb['Base Form'], simple_past, past_participle)
-        if is_correct:
-            st.session_state.score += 1
-            st.success("Correct! Well done!")
-        else:
-            st.error("Incorrect.")
-            st.info(f"Correct forms: Simple Past - {correct['Simple Past']}, Past Participle - {correct['Past Participle']}")
+        return True
+    else:
+        st.session_state.streak = 0
+        st.session_state.attempts += 1
+        return False
 
-    st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
-    if st.session_state.attempts > 0:
-        accuracy = (st.session_state.score / st.session_state.attempts) * 100
-        st.write(f"Accuracy: {accuracy:.2f}%")
+# Function to check and award badges
+def check_badges():
+    for _, badge in achievements.iterrows():
+        if badge['trigger'] == 'streak' and st.session_state.streak >= int(badge['trigger_value']):
+            if badge['name'] not in st.session_state.badges:
+                st.session_state.badges.append(badge['name'])
+
+# Function to check reminders
+def check_reminders(simple_past, past_participle):
+    for _, reminder in reminders.iterrows():
+        if reminder['trigger'] == 'writting_writen' and (simple_past.lower() == 'wrotte' or past_participle.lower() == 'writen'):
+            if reminder['name'] not in st.session_state.reminders:
+                st.session_state.reminders.append(reminder['name'])
+
+# Sidebar for achievements and reminders
+with st.sidebar:
+    st.header("🏅 Achievements")
+    badge_table = []
+    for _, badge in achievements.iterrows():
+        if badge['name'] in st.session_state.badges:
+            badge_table.append([badge['emoji'], badge['name'], badge['description'], "✅ Earned"])
+        else:
+            badge_table.append([badge['emoji'], badge['name'], badge['description'], "🔒"])
+    st.table(pd.DataFrame(badge_table, columns=["Icon", "Badge Name", "Description", "Status"]).style.hide(axis='index'))
+
+    st.header("😬 Reminders: Learn from Your Mistakes")
+    reminder_table = []
+    for _, reminder in reminders.iterrows():
+        if reminder['name'] in st.session_state.reminders:
+            reminder_table.append([reminder['emoji'], reminder['name'], reminder['description'], "✅ Earned"])
+        else:
+            reminder_table.append([reminder['emoji'], reminder['name'], reminder['description'], "🔒"])
+    st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Description", "Status"]).style.hide(axis='index'))
+
+# Main app
+st.title("Irregular Verbs Practice")
+
+mode = st.selectbox("Choose Mode", ["Single Verb", "Grid Mode"])
+
+if mode == "Single Verb":
+    st.header("Single Verb Quiz")
+    verb = verbs.sample().iloc[0]
+    st.write(f"Base Form: **{verb['Base Form']}**")
+    simple_past = st.text_input("Simple Past")
+    past_participle = st.text_input("Past Participle")
+    if st.button("Submit"):
+        if check_answers(verb['Base Form'], simple_past, past_participle):
+            st.success("Correct!")
+        else:
+            st.error("Incorrect!")
+        check_badges()
+        check_reminders(simple_past, past_participle)
 
 elif mode == "Grid Mode":
-    st.header("🧩 Grid Mode")
-    if "grid_verbs" not in st.session_state:
-        st.session_state.grid_verbs = verbs_df.sample(20).reset_index(drop=True)
+    st.header("Grid Mode")
+    grid_verbs = verbs.sample(10)
+    for i, row in grid_verbs.iterrows():
+        st.write(f"Base Form: **{row['Base Form']}**")
+        simple_past = st.text_input(f"Simple Past {i+1}")
+        past_participle = st.text_input(f"Past Participle {i+1}")
+        if st.button(f"Submit {i+1}"):
+            if check_answers(row['Base Form'], simple_past, past_participle):
+                st.success("Correct!")
+            else:
+                st.error("Incorrect!")
+            check_badges()
+            check_reminders(simple_past, past_participle)
 
-    user_inputs = []
-    show_answers = st.button("🔍 Check All")
+# Display score
+st.write(f"Score: {st.session_state.score}")
+st.write(f"Attempts: {st.session_state.attempts}")
+st.write(f"Streak: {st.session_state.streak}")
 
-    st.write("### Fill in the forms:")
-    for i, row in st.session_state.grid_verbs.iterrows():
-        col1, col2, col3, col4 = st.columns([2, 1.5, 1.5, 2])
-        with col1:
-            st.markdown(f"**{row['Base Form']}**")
-        with col2:
-            simple_past = st.text_input("", key=f"sp_{i}", placeholder="Simple Past", label_visibility="collapsed")
-        with col3:
-            past_participle = st.text_input("", key=f"pp_{i}", placeholder="Past Participle", label_visibility="collapsed")
-        with col4:
-            if show_answers:
-                is_correct, correct = check_answers(row['Base Form'], simple_past, past_participle)
-                if is_correct:
-                    st.success("✓")
-                else:
-                    st.error(f"{correct['Simple Past']}, {correct['Past Participle']}")
-        user_inputs.append((row['Base Form'], simple_past, past_participle))
-
-    if st.button("🆕 New Verbs"):
-        st.session_state.grid_verbs = verbs_df.sample(20).reset_index(drop=True)
-
-    st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
-    if st.session_state.attempts > 0:
-        accuracy = (st.session_state.score / st.session_state.attempts) * 100
-        st.write(f"Accuracy: {accuracy:.2f}%")
-
-if st.button("🔁 Reset Score"):
-    st.session_state.score = 0
-    st.session_state.attempts = 0
