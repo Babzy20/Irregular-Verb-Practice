@@ -4,107 +4,73 @@ import pandas as pd
 # Load verbs data
 verbs = pd.read_csv('verbs.csv')
 
-# Load achievements and reminders data
-achievements = pd.read_csv('achievements.csv')
-reminders = pd.read_csv('reminders.csv')
-
-# Initialize session state variables
+# Initialize session state
 if 'score' not in st.session_state:
     st.session_state.score = 0
 if 'attempts' not in st.session_state:
     st.session_state.attempts = 0
-if 'streak' not in st.session_state:
-    st.session_state.streak = 0
-if 'badges' not in st.session_state:
-    st.session_state.badges = []
-if 'reminders' not in st.session_state:
-    st.session_state.reminders = []
 
-# Function to check answers and update score
+# Function to check answers
 def check_answers(base_form, simple_past, past_participle):
-    correct = verbs[(verbs['Base Form'] == base_form) & 
-                    (verbs['Simple Past'] == simple_past) & 
-                    (verbs['Past Participle'] == past_participle)]
-    if not correct.empty:
-        st.session_state.score += 1
-        st.session_state.streak += 1
-        st.session_state.attempts += 1
-        return True
-    else:
-        st.session_state.streak = 0
-        st.session_state.attempts += 1
-        return False
+    correct = verbs[verbs['Base Form'] == base_form].iloc[0]
+    return (
+        simple_past.strip().lower() == correct['Simple Past'].strip().lower() and
+        past_participle.strip().lower() == correct['Past Participle'].strip().lower()
+    )
 
-# Function to check and award badges
-def check_badges():
-    for _, badge in achievements.iterrows():
-        if badge['trigger'] == 'streak' and st.session_state.streak >= int(badge['trigger_value']):
-            if badge['name'] not in st.session_state.badges:
-                st.session_state.badges.append(badge['name'])
+# App title
+st.title("📚 Irregular Verbs Practice")
 
-# Function to check reminders
-def check_reminders(simple_past, past_participle):
-    for _, reminder in reminders.iterrows():
-        if reminder['trigger'] == 'writting_writen' and (simple_past.lower() == 'wrotte' or past_participle.lower() == 'writen'):
-            if reminder['name'] not in st.session_state.reminders:
-                st.session_state.reminders.append(reminder['name'])
+# Mode selection
+mode = st.selectbox("Choose Mode", ["Single Verb Mode", "Grid Mode"])
 
-# Sidebar for achievements and reminders
-with st.sidebar:
-    st.header("🏅 Achievements")
-    badge_table = []
-    for _, badge in achievements.iterrows():
-        if badge['name'] in st.session_state.badges:
-            badge_table.append([badge['emoji'], badge['name'], badge['description'], "✅ Earned"])
-        else:
-            badge_table.append([badge['emoji'], badge['name'], badge['description'], "🔒"])
-    st.table(pd.DataFrame(badge_table, columns=["Icon", "Badge Name", "Description", "Status"]).style.hide(axis='index'))
-
-    st.header("😬 Reminders: Learn from Your Mistakes")
-    reminder_table = []
-    for _, reminder in reminders.iterrows():
-        if reminder['name'] in st.session_state.reminders:
-            reminder_table.append([reminder['emoji'], reminder['name'], reminder['description'], "✅ Earned"])
-        else:
-            reminder_table.append([reminder['emoji'], reminder['name'], reminder['description'], "🔒"])
-    st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Description", "Status"]).style.hide(axis='index'))
-
-# Main app
-st.title("Irregular Verbs Practice")
-
-mode = st.selectbox("Choose Mode", ["Single Verb", "Grid Mode"])
-
-if mode == "Single Verb":
-    st.header("Single Verb Quiz")
-    verb = verbs.sample().iloc[0]
+if mode == "Single Verb Mode":
+    st.header("🎯 Single Verb Mode")
+    verb = verbs.sample(1).iloc[0]
     st.write(f"Base Form: **{verb['Base Form']}**")
     simple_past = st.text_input("Simple Past")
     past_participle = st.text_input("Past Participle")
-    if st.button("Submit"):
+
+    if st.button("Check Answer"):
+        st.session_state.attempts += 1
         if check_answers(verb['Base Form'], simple_past, past_participle):
+            st.session_state.score += 1
             st.success("Correct!")
         else:
-            st.error("Incorrect!")
-        check_badges()
-        check_reminders(simple_past, past_participle)
+            st.error(f"Incorrect! Correct: {verb['Simple Past']}, {verb['Past Participle']}")
 
 elif mode == "Grid Mode":
-    st.header("Grid Mode")
-    grid_verbs = verbs.sample(10)
-    for i, row in grid_verbs.iterrows():
+    st.header("🧩 Grid Mode")
+
+    if "grid_verbs" not in st.session_state:
+        st.session_state.grid_verbs = verbs.sample(10).reset_index(drop=True)
+
+    st.write("### Fill in the forms:")
+    for i, row in st.session_state.grid_verbs.iterrows():
         col1, col2, col3, col4 = st.columns([2, 1.5, 1.5, 2])
-        with col1:
-            st.markdown(f"**{row['Base Form']}**")
-        with col2:
-            simple_past = st.text_input("", key=f"sp_{i}", placeholder="Simple Past", label_visibility="collapsed")
-        with col3:
-            past_participle = st.text_input("", key=f"pp_{i}", placeholder="Past Participle", label_visibility="collapsed")
-        user_inputs[row['Base Form']] = {
-            'simple_past': simple_past,
-            'past_participle': past_participle
+        with col1:
+            st.markdown(f"**{row['Base Form']}**")
+        with col2:
+            st.text_input("", key=f"sp_{i}", placeholder="Simple Past", label_visibility="collapsed")
+        with col3:
+            st.text_input("", key=f"pp_{i}", placeholder="Past Participle", label_visibility="collapsed")
 
+    if st.button("🔍 Check All"):
+        for i, row in st.session_state.grid_verbs.iterrows():
+            sp = st.session_state[f"sp_{i}"]
+            pp = st.session_state[f"pp_{i}"]
+            st.session_state.attempts += 1
+            if check_answers(row['Base Form'], sp, pp):
+                st.session_state.score += 1
+                st.success(f"{row['Base Form']}: ✓")
+            else:
+                correct = verbs[verbs['Base Form'] == row['Base Form']].iloc[0]
+                st.error(f"{row['Base Form']}: {correct['Simple Past']}, {correct['Past Participle']}")
 
-# Display score
-st.write(f"Score: {st.session_state.score}")
-st.write(f"Attempts: {st.session_state.attempts}")
-st.write(f"Streak: {st.session_state.streak}")
+    if st.button("🆕 New Verbs"):
+        st.session_state.grid_verbs = verbs.sample(10).reset_index(drop=True)
+
+    st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
+    if st.session_state.attempts > 0:
+        accuracy = (st.session_state.score / st.session_state.attempts) * 100
+        st.write(f"Accuracy: {accuracy:.2f}%")
