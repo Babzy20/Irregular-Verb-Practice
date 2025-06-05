@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 
@@ -70,7 +69,7 @@ def check_reminders(base_form, simple_past, past_participle):
             if reminder["name"] not in st.session_state.reminders:
                 st.session_state.reminders.append(reminder["name"])
                 new_reminders.append(reminder)
-        elif reminder["trigger"] == "writting_writen" and (simple_past.lower() == "wrotte" or past_participle.lower() == "writen"):
+        elif reminder["trigger"] == "writting_writen" and (simple_past.lower() == "writting" or past_participle.lower() == "writen"):
             if reminder["name"] not in st.session_state.reminders:
                 st.session_state.reminders.append(reminder["name"])
                 new_reminders.append(reminder)
@@ -211,8 +210,7 @@ with st.sidebar:
     for badge in badges:
         status = "✅ Earned" if badge["name"] in st.session_state.badges else "🔒"
         badge_table.append([badge["emoji"], badge["name"], badge["description"], status])
-        st.table(pd.DataFrame(badge_table, columns=["Icon", "Badge Name", "Description", "Status"]).style.hide(axis='index'))
-
+    st.table(pd.DataFrame(badge_table, columns=["Icon", "Badge Name", "Description", "Status"]))
 
 # Display reminders board in sidebar
 with st.sidebar:
@@ -224,6 +222,6 @@ with st.sidebar:
         else:
             reminder_table.append([reminder["emoji"], reminder["name"], reminder["description"], "🔒"])
     if any(r["name"] in st.session_state.reminders for r in reminders):
-        st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Description", "Status"]).style.hide(axis='index'))
+        st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Description", "Status"]))
     else:
-        st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Description", "Status"]).style.hide(axis='index'))
+        st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Description", "Status"]))
