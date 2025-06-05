@@ -92,16 +92,17 @@ elif mode == "Grid Mode":
     st.header("Grid Mode")
     grid_verbs = verbs.sample(10)
     for i, row in grid_verbs.iterrows():
-        st.write(f"Base Form: **{row['Base Form']}**")
-        simple_past = st.text_input(f"Simple Past {i+1}")
-        past_participle = st.text_input(f"Past Participle {i+1}")
-        if st.button(f"Submit {i+1}"):
-            if check_answers(row['Base Form'], simple_past, past_participle):
-                st.success("Correct!")
-            else:
-                st.error("Incorrect!")
-            check_badges()
-            check_reminders(simple_past, past_participle)
+        col1, col2, col3, col4 = st.columns([2, 1.5, 1.5, 2])
+        with col1:
+            st.markdown(f"**{row['Base Form']}**")
+        with col2:
+            simple_past = st.text_input("", key=f"sp_{i}", placeholder="Simple Past", label_visibility="collapsed")
+        with col3:
+            past_participle = st.text_input("", key=f"pp_{i}", placeholder="Past Participle", label_visibility="collapsed")
+        user_inputs[row['Base Form']] = {
+            'simple_past': simple_past,
+            'past_participle': past_participle
+
 
 # Display score
 st.write(f"Score: {st.session_state.score}")
