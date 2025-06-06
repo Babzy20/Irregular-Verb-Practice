@@ -20,21 +20,21 @@ for key, default in {
     if key not in st.session_state:
         st.session_state[key] = default
 
-# Define badges and reminders
-badges = [
-    {"name": "No more a novice!", "emoji": "🙌", "trigger": 1, "description": "You got your first one right!"},
-    {"name": "Five star!", "emoji": "⭐⭐⭐⭐⭐", "trigger": 5, "description": "You're on a roll! 5 in a row!"},
-    {"name": "As great as ninTENdo", "emoji": "😅", "trigger": 10, "description": "10 in a row? Let's go!"}
-]
+# Load badges (achievements)
+@st.cache_data
+def load_badges():
+    df = pd.read_csv("achievements.csv")
+    df['trigger'] = df['trigger'].apply(lambda x: int(x) if str(x).isdigit() else x)
+    return df.to_dict(orient='records')
 
-reminders = [
-    {"name": "You have fallen for it", "emoji": "🦂", "trigger": "feel_fall", "description": "Confused forms of feel and fall"},
-    {"name": "Learn how to write", "emoji": "✏️", "trigger": "wrotte_writen", "description": "'Written' is the only form with 2 Ts"},
-    {"name": "You just got caught!", "emoji": "🕵️‍♂️", "trigger": "catched", "description": "Wrote 'catched'"},
-    {"name": "Think it through or we'll teach you a lesson!", "emoji": "🧠", "trigger": "teach_think", "description": "Confused forms of teach and think"},
-    {"name": "When times are tough", "emoji": "🍦", "trigger": "5_mistakes_in_a_row", "description": "5 mistakes in a row"},
-    {"name": "Fool me twice, shame on me!", "emoji": "😤", "trigger": "repeat_mistake", "description": "Made the same mistake twice in the same session"}
-]
+badges = load_badges()
+
+# Load reminders
+@st.cache_data
+def load_reminders():
+    return pd.read_csv("reminders.csv").to_dict(orient='records')
+
+reminders = load_reminders()
 
 # Check answers
 def check_answers(base_form, simple_past, past_participle):
