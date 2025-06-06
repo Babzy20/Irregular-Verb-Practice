@@ -119,16 +119,19 @@ if mode == "Grid Mode":
             for badge in new_badges:
                 st.toast(f"🎉 New Badge: {badge['emoji']} {badge['name']} - {badge['description']}")
 
+    # Move the 'New Verbs' button logic and clearing keys inside this block:
     if st.button("🆕 New Verbs"):
         st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
-    for i in range(10):
-        st.session_state.pop(f"sp_{i}", None)
-        st.session_state.pop(f"pp_{i}", None)
+        # Clear previous inputs immediately after sampling new verbs
+        for i in range(10):
+            st.session_state.pop(f"sp_{i}", None)
+            st.session_state.pop(f"pp_{i}", None)
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
     if st.session_state.attempts > 0:
         accuracy = (st.session_state.score / st.session_state.attempts) * 100
         st.write(f"Accuracy: {accuracy:.2f}%")
+
 
 elif mode == "Single Verb Quiz":
     st.header("🎯 Single Verb Quiz")
