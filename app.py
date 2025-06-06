@@ -140,7 +140,7 @@ elif mode == "Single Verb Quiz":
     user_pp = st.text_input("Past Participle")
 
     if st.button("🆕 New Verbs"):
-    st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
+        st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
     for i in range(10):
         st.session_state.pop(f"sp_{i}", None)
         st.session_state.pop(f"pp_{i}", None)
