@@ -126,6 +126,45 @@ if mode == "Grid Mode":
         accuracy = (st.session_state.score / st.session_state.attempts) * 100
         st.write(f"Accuracy: {accuracy:.2f}%")
 
+elif mode == "Single Verb Quiz":
+    st.header("🎯 Single Verb Quiz")
+
+    if "current_verb" not in st.session_state:
+        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+
+    verb = st.session_state.current_verb
+
+    st.write(f"**Base form:** {verb['Base Form']}")
+
+    user_sp = st.text_input("Simple Past")
+    user_pp = st.text_input("Past Participle")
+
+    if st.button("Check Answer"):
+        is_correct, correct = check_answers(verb['Base Form'], user_sp, user_pp)
+        st.session_state.attempts += 1
+
+        if is_correct:
+            st.success("Correct! ✅")
+            st.session_state.score += 1
+            st.session_state.streak += 1
+        else:
+            st.error(f"Incorrect. Correct answers: {correct['Simple Past']}, {correct['Past Participle']}")
+            st.session_state.streak = 0
+            new_reminders = check_reminders(verb['Base Form'], user_sp, user_pp)
+            for reminder in new_reminders:
+                st.toast(f"⚠️ Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
+
+        new_badges = check_badges(st.session_state.streak)
+        for badge in new_badges:
+            st.toast(f"🎉 New Badge: {badge['emoji']} {badge['name']} - {badge['description']}")
+
+        st.session_state.current_verb = verbs_df.sample(1).iloc[0]  # Load new verb after answer
+
+    st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
+    if st.session_state.attempts > 0:
+        accuracy = (st.session_state.score / st.session_state.attempts) * 100
+        st.write(f"Accuracy: {accuracy:.2f}%")
+
 # Sidebar
 with st.sidebar:
     st.header("🏅 Achievements")
