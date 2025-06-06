@@ -142,11 +142,17 @@ elif mode == "Single Verb Quiz":
     user_sp = st.text_input("Simple Past")
     user_pp = st.text_input("Past Participle")
 
-    if st.button("🆕 New Verbs"):
-        st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
+if st.button("🆕 New Verbs"):
+    st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
     for i in range(10):
         st.session_state.pop(f"sp_{i}", None)
         st.session_state.pop(f"pp_{i}", None)
+
+for i in range(10):
+    sp_val = st.session_state.get(f"sp_{i}", "")
+    pp_val = st.session_state.get(f"pp_{i}", "")
+    st.text_input(f"SP Input {i}", key=f"sp_{i}", value=sp_val)
+    st.text_input(f"PP Input {i}", key=f"pp_{i}", value=pp_val)
     
     if st.button("Check Answer"):
         is_correct, correct = check_answers(verb['Base Form'], user_sp, user_pp)
