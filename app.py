@@ -129,6 +129,12 @@ if mode == "Grid Mode":
 elif mode == "Single Verb Quiz":
     st.header("🎯 Single Verb Quiz")
 
+if st.button("🆕 New Verbs"):
+    st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
+    for i in range(10):
+        st.session_state.pop(f"sp_{i}", None)
+        st.session_state.pop(f"pp_{i}", None)
+
     if "current_verb" not in st.session_state:
         st.session_state.current_verb = verbs_df.sample(1).iloc[0]
 
