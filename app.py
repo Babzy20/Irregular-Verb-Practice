@@ -120,9 +120,9 @@ if mode == "Grid Mode":
 
     if st.button("🆕 New Verbs"):
         st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
-    for i in range(10):
-        st.session_state.pop(f"sp_{i}", None)
-        st.session_state.pop(f"pp_{i}", None)
+        for i in range(10):
+            st.session_state.pop(f"sp_{i}", None)
+            st.session_state.pop(f"pp_{i}", None)
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
     if st.session_state.attempts > 0:
