@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 
@@ -86,6 +85,8 @@ mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_s
 
 if mode == "Grid Mode":
     st.header("🧩 Grid Mode")
+
+    # Initialize grid verbs if not yet
     if "grid_verbs" not in st.session_state:
         st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
 
@@ -121,9 +122,10 @@ if mode == "Grid Mode":
 
     if st.button("🆕 New Verbs"):
         st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
-    for i in range(10):
-        st.session_state.pop(f"sp_{i}", None)
-        st.session_state.pop(f"pp_{i}", None)
+        # Clear the grid input answers:
+        for i in range(10):
+            st.session_state.pop(f"sp_{i}", None)
+            st.session_state.pop(f"pp_{i}", None)
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
     if st.session_state.attempts > 0:
@@ -133,6 +135,7 @@ if mode == "Grid Mode":
 elif mode == "Single Verb Quiz":
     st.header("🎯 Single Verb Quiz")
 
+    # Initialize current verb if not yet
     if "current_verb" not in st.session_state:
         st.session_state.current_verb = verbs_df.sample(1).iloc[0]
 
@@ -140,15 +143,17 @@ elif mode == "Single Verb Quiz":
 
     st.write(f"**Base form:** {verb['Base Form']}")
 
-    user_sp = st.text_input("Simple Past")
-    user_pp = st.text_input("Past Participle")
+    # Use keys for inputs so we can clear on "New Verbs"
+    user_sp = st.text_input("Simple Past", key="user_sp")
+    user_pp = st.text_input("Past Participle", key="user_pp")
 
     if st.button("🆕 New Verbs"):
-        st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
-    for i in range(10):
-        st.session_state.pop(f"sp_{i}", None)
-        st.session_state.pop(f"pp_{i}", None)
-    
+        # Clear inputs
+        st.session_state.pop("user_sp", None)
+        st.session_state.pop("user_pp", None)
+        # Load a new verb
+        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+
     if st.button("Check Answer"):
         is_correct, correct = check_answers(verb['Base Form'], user_sp, user_pp)
         st.session_state.attempts += 1
@@ -168,7 +173,11 @@ elif mode == "Single Verb Quiz":
         for badge in new_badges:
             st.toast(f"🎉 New Badge: {badge['emoji']} {badge['name']} - {badge['description']}")
 
-        st.session_state.current_verb = verbs_df.sample(1).iloc[0]  # Load new verb after answer
+        # Load a new verb after checking answer
+        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+        # Clear inputs for the new verb
+        st.session_state.pop("user_sp", None)
+        st.session_state.pop("user_pp", None)
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
     if st.session_state.attempts > 0:
