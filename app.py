@@ -120,12 +120,19 @@ if mode == "Grid Mode":
                 st.toast(f"🎉 New Badge: {badge['emoji']} {badge['name']} - {badge['description']}")
 
     # Move the 'New Verbs' button logic and clearing keys inside this block:
-    if st.button("🆕 New Verbs"):
-        st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
-        # Clear previous inputs immediately after sampling new verbs
-        for i in range(10):
-            st.session_state.pop(f"sp_{i}", None)
-            st.session_state.pop(f"pp_{i}", None)
+        if "new_verbs_clicked" not in st.session_state:
+            st.session_state.new_verbs_clicked = False
+
+        if st.button("🆕 New Verbs"):
+            st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
+            st.session_state.new_verbs_clicked = True
+
+        if st.session_state.new_verbs_clicked:
+            for i in range(10):
+                st.session_state.pop(f"sp_{i}", None)
+                st.session_state.pop(f"pp_{i}", None)
+            st.session_state.new_verbs_clicked = False
+
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
     if st.session_state.attempts > 0:
