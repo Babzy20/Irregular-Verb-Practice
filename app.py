@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # Load the CSV files
-verbs_df = pd.read_csv('verbs 6.csv')
+verbs_df = pd.read_csv('verbs.csv')
 reminders_df = pd.read_csv('reminders.csv')
 
 # Initialize session state variables
