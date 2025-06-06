@@ -86,7 +86,7 @@ mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_s
 if mode == "Grid Mode":
     st.header("🧩 Grid Mode")
     if st.button("🆕 New Verbs"):
-    st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
+        st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
 
 if "grid_verbs" not in st.session_state:
     st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
