@@ -62,7 +62,9 @@ def check_badges(streak):
 
     new_badges = []
     for badge in badges:
-        if streak >= badge["trigger"] and badge["name"] not in st.session_state.badges:
+        trigger = badge["trigger"]
+        # Only handle numeric streak-based badges
+        if isinstance(trigger, int) and streak >= trigger and badge["name"] not in st.session_state.badges:
             st.session_state.badges.append(badge["name"])
             new_badges.append(badge)
     return new_badges
