@@ -82,29 +82,44 @@ def check_reminders(base_form, simple_past, past_participle):
     new_reminders = []
     mistake = {"base_form": base_form, "simple_past": simple_past, "past_participle": past_participle}
     st.session_state.mistakes.append(mistake)
+
     for reminder in reminders:
         trigger = reminder["trigger"]
+
+        # Example reminder checks (adjust according to your data triggers)
         if trigger == "feel_fall" and (simple_past.lower() in ["fell", "felt"] or past_participle.lower() in ["fallen", "felt"]):
-            pass
+            if reminder["name"] not in st.session_state.reminders:
+                st.session_state.reminders.append(reminder["name"])
+                new_reminders.append(reminder)
+
         elif trigger == "wrotte_writen" and (simple_past.lower() == "writting" or past_participle.lower() == "writen"):
-            pass
+            if reminder["name"] not in st.session_state.reminders:
+                st.session_state.reminders.append(reminder["name"])
+                new_reminders.append(reminder)
+
         elif trigger == "catched" and (simple_past.lower() == "catched" or past_participle.lower() == "catched"):
-            pass
+            if reminder["name"] not in st.session_state.reminders:
+                st.session_state.reminders.append(reminder["name"])
+                new_reminders.append(reminder)
+
         elif trigger == "teach_think" and (simple_past.lower() in ["taught", "thought"] or past_participle.lower() in ["taught", "thought"]):
-            pass
-        elif trigger == "5_mistakes_in_a_row" and len(st.session_state.mistakes) >= 5 and all(m["simple_past"] == "" or m["past_participle"] == "" for m in st.session_state.mistakes[-5:]):
-            pass
+            if reminder["name"] not in st.session_state.reminders:
+                st.session_state.reminders.append(reminder["name"])
+                new_reminders.append(reminder)
+
+        elif trigger == "5_mistakes_in_a_row" and len(st.session_state.mistakes) >= 5:
+            last5 = st.session_state.mistakes[-5:]
+            if all(m["simple_past"] == "" or m["past_participle"] == "" for m in last5):
+                if reminder["name"] not in st.session_state.reminders:
+                    st.session_state.reminders.append(reminder["name"])
+                    new_reminders.append(reminder)
+
         elif trigger == "repeat_mistake" and st.session_state.mistakes.count(mistake) > 1:
-            pass
-        else:
-            continue
-if reminder["name"] not in st.session_state.reminders:
-    st.session_state.reminders.append(reminder["name"])
-    new_reminders.append(reminder)
-    # Check for matching badge
-    new_badges = check_badges(trigger_name=reminder["trigger"])
-    for badge in new_badges:
-        st.toast(f"🎉 New Badge: {badge['emoji']} {badge['name']} - {badge['description']}")
+            if reminder["name"] not in st.session_state.reminders:
+                st.session_state.reminders.append(reminder["name"])
+                new_reminders.append(reminder)
+
+    return new_reminders
 
 # ----------------------------
 # UI
@@ -118,18 +133,12 @@ if mode == "Grid Mode":
     if "grid_verbs" not in st.session_state:
         st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
 
-    if "new_verbs_clicked" not in st.session_state:
-        st.session_state.new_verbs_clicked = False
-
     if st.button("🆕 New Verbs"):
         st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
-        st.session_state.new_verbs_clicked = True
-
-    if st.session_state.new_verbs_clicked:
+        # Clear text inputs
         for i in range(10):
             st.session_state.pop(f"sp_{i}", None)
             st.session_state.pop(f"pp_{i}", None)
-        st.session_state.new_verbs_clicked = False
 
     check_pressed = st.button("🔍 Check All")
 
@@ -156,7 +165,8 @@ if mode == "Grid Mode":
                     st.error(f"{correct['Simple Past']}, {correct['Past Participle']}")
                 new_reminders = check_reminders(row['Base Form'], sp, pp)
                 for reminder in new_reminders:
-                    st.toast(f"⚠️ Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
+                    # Removed st.toast (not a Streamlit function)
+                    st.warning(f"⚠️ Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
 
             new_badges = check_badges(st.session_state.streak)
             for badge in new_badges:
@@ -177,8 +187,8 @@ elif mode == "Single Verb Quiz":
 
     st.write(f"**Base form:** {verb['Base Form']}")
 
-    user_sp = st.text_input("Simple Past")
-    user_pp = st.text_input("Past Participle")
+    user_sp = st.text_input("Simple Past", key="user_sp")
+    user_pp = st.text_input("Past Participle", key="user_pp")
 
     if st.button("Check Answer"):
         is_correct, correct = check_answers(verb['Base Form'], user_sp, user_pp)
@@ -193,12 +203,15 @@ elif mode == "Single Verb Quiz":
             st.session_state.streak = 0
             new_reminders = check_reminders(verb['Base Form'], user_sp, user_pp)
             for reminder in new_reminders:
-                st.toast(f"⚠️ Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
+                st.warning(f"⚠️ Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
 
         new_badges = check_badges(st.session_state.streak)
         for badge in new_badges:
             show_achievement_banner(f"{badge['emoji']} {badge['name']} - {badge['description']}")
 
+        # Reset inputs and get a new verb
+        st.session_state.user_sp = ""
+        st.session_state.user_pp = ""
         st.session_state.current_verb = verbs_df.sample(1).iloc[0]
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
