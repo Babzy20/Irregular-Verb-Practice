@@ -210,8 +210,8 @@ elif mode == "Single Verb Quiz":
             show_achievement_banner(f"{badge['emoji']} {badge['name']} - {badge['description']}")
 
         # Reset inputs and get a new verb
-        st.session_state.user_sp = ""
-        st.session_state.user_pp = ""
+        st.session_state["user_sp"] = ""
+        st.session_state["user_pp"] = ""
         st.session_state.current_verb = verbs_df.sample(1).iloc[0]
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
