@@ -56,17 +56,26 @@ def check_answers(base_form, simple_past, past_participle):
         past_participle.strip().lower() == correct['Past Participle'].strip().lower()
     ), correct
 
-def check_badges(streak):
+def check_badges(streak=None, trigger_name=None):
+    new_badges = []
     if "badges" not in st.session_state:
         st.session_state.badges = []
 
-    new_badges = []
     for badge in badges:
         trigger = badge["trigger"]
-        # Only handle numeric streak-based badges
-        if isinstance(trigger, int) and streak >= trigger and badge["name"] not in st.session_state.badges:
-            st.session_state.badges.append(badge["name"])
-            new_badges.append(badge)
+
+        # Check for streak-based badge
+        if isinstance(trigger, int) and streak is not None:
+            if streak >= trigger and badge["name"] not in st.session_state.badges:
+                st.session_state.badges.append(badge["name"])
+                new_badges.append(badge)
+
+        # Check for trigger-name-based badge (like a reminder event)
+        elif isinstance(trigger, str) and trigger_name == trigger:
+            if badge["name"] not in st.session_state.badges:
+                st.session_state.badges.append(badge["name"])
+                new_badges.append(badge)
+
     return new_badges
 
 def check_reminders(base_form, simple_past, past_participle):
@@ -89,10 +98,13 @@ def check_reminders(base_form, simple_past, past_participle):
             pass
         else:
             continue
-        if reminder["name"] not in st.session_state.reminders:
-            st.session_state.reminders.append(reminder["name"])
-            new_reminders.append(reminder)
-    return new_reminders
+if reminder["name"] not in st.session_state.reminders:
+    st.session_state.reminders.append(reminder["name"])
+    new_reminders.append(reminder)
+    # Check for matching badge
+    new_badges = check_badges(trigger_name=reminder["trigger"])
+    for badge in new_badges:
+        st.toast(f"🎉 New Badge: {badge['emoji']} {badge['name']} - {badge['description']}")
 
 # ----------------------------
 # UI
