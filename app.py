@@ -98,13 +98,14 @@ def check_reminders(base_form, simple_past, past_participle):
             pass
         else:
             continue
-if reminder["name"] not in st.session_state.reminders:
-    st.session_state.reminders.append(reminder["name"])
-    new_reminders.append(reminder)
-    # Check for matching badge
-    new_badges = check_badges(trigger_name=reminder["trigger"])
-    for badge in new_badges:
-        st.toast(f"🎉 New Badge: {badge['emoji']} {badge['name']} - {badge['description']}")
+        if reminder["name"] not in st.session_state.reminders:
+            st.session_state.reminders.append(reminder["name"])
+            new_reminders.append(reminder)
+            # Check for matching badge
+            new_badges = check_badges(trigger_name=reminder["trigger"])
+            for badge in new_badges:
+                st.toast(f"🎉 New Badge: {badge['emoji']} {badge['name']} - {badge['description']}")
+    return new_reminders
 
 # ----------------------------
 # UI
@@ -173,12 +174,22 @@ elif mode == "Single Verb Quiz":
     if "current_verb" not in st.session_state:
         st.session_state.current_verb = verbs_df.sample(1).iloc[0]
 
+    if "user_sp" not in st.session_state:
+        st.session_state.user_sp = ""
+    if "user_pp" not in st.session_state:
+        st.session_state.user_pp = ""
+
     verb = st.session_state.current_verb
 
     st.write(f"**Base form:** {verb['Base Form']}")
 
-    user_sp = st.text_input("Simple Past")
-    user_pp = st.text_input("Past Participle")
+    user_sp = st.text_input("Simple Past", key="user_sp")
+    user_pp = st.text_input("Past Participle", key="user_pp")
+
+    if st.button("🆕 New Verb"):
+        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+        st.session_state.user_sp = ""
+        st.session_state.user_pp = ""
 
     if st.button("Check Answer"):
         is_correct, correct = check_answers(verb['Base Form'], user_sp, user_pp)
@@ -199,7 +210,10 @@ elif mode == "Single Verb Quiz":
         for badge in new_badges:
             show_achievement_banner(f"{badge['emoji']} {badge['name']} - {badge['description']}")
 
+        # Reset inputs and load a new verb after checking
         st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+        st.session_state.user_sp = ""
+        st.session_state.user_pp = ""
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
     if st.session_state.attempts > 0:
