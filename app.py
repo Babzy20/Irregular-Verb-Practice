@@ -177,42 +177,66 @@ if mode == "Grid Mode":
         accuracy = (st.session_state.score / st.session_state.attempts) * 100
         st.write(f"Accuracy: {accuracy:.2f}%")
 
-elif mode == "Single Verb Quiz":
-    st.header("🎯 Single Verb Quiz")
+def check_answer_callback():
+    is_correct, correct = check_answers(
+        st.session_state.current_verb['Base Form'],
+        st.session_state.user_sp,
+        st.session_state.user_pp
+    )
+    st.session_state.attempts += 1
 
-    if "current_verb" not in st.session_state:
-        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+    if is_correct:
+        st.session_state.score += 1
+        st.session_state.streak += 1
+        st.session_state.feedback = ("success", "Correct! ✅")
+    else:
+        st.session_state.streak = 0
+        correct_text = f"Incorrect. Correct answers: {correct['Simple Past']}, {correct['Past Participle']}"
+        st.session_state.feedback = ("error", correct_text)
 
-    verb = st.session_state.current_verb
+    # Reset inputs
+    st.session_state.user_sp = ""
+    st.session_state.user_pp = ""
 
-    st.write(f"**Base form:** {verb['Base Form']}")
+    # Get new verb
+    st.session_state.current_verb = verbs_df.sample(1).iloc[0]
 
-    user_sp = st.text_input("Simple Past", key="user_sp")
-    user_pp = st.text_input("Past Participle", key="user_pp")
+# Initialize current verb if needed
+if "current_verb" not in st.session_state:
+    st.session_state.current_verb = verbs_df.sample(1).iloc[0]
 
-    if st.button("Check Answer"):
-        is_correct, correct = check_answers(verb['Base Form'], user_sp, user_pp)
-        st.session_state.attempts += 1
+# Initialize input fields in session state if missing
+if "user_sp" not in st.session_state:
+    st.session_state.user_sp = ""
+if "user_pp" not in st.session_state:
+    st.session_state.user_pp = ""
 
-        if is_correct:
-            st.success("Correct! ✅")
-            st.session_state.score += 1
-            st.session_state.streak += 1
-        else:
-            st.error(f"Incorrect. Correct answers: {correct['Simple Past']}, {correct['Past Participle']}")
-            st.session_state.streak = 0
+# Initialize feedback placeholder
+if "feedback" not in st.session_state:
+    st.session_state.feedback = ("", "")
 
-        # Reset inputs
-        st.session_state["user_sp"] = ""
-        st.session_state["user_pp"] = ""
+st.header("🎯 Single Verb Quiz")
 
-        # Get a new verb
-        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+verb = st.session_state.current_verb
+st.write(f"**Base form:** {verb['Base Form']}")
 
-    st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
-    if st.session_state.attempts > 0:
-        accuracy = (st.session_state.score / st.session_state.attempts) * 100
-        st.write(f"Accuracy: {accuracy:.2f}%")
+user_sp = st.text_input("Simple Past", key="user_sp")
+user_pp = st.text_input("Past Participle", key="user_pp")
+
+if st.button("Check Answer", on_click=check_answer_callback):
+    pass  # Callback does all work
+
+# Show feedback
+if st.session_state.feedback[0] == "success":
+    st.success(st.session_state.feedback[1])
+elif st.session_state.feedback[0] == "error":
+    st.error(st.session_state.feedback[1])
+
+st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
+if st.session_state.attempts > 0:
+    accuracy = (st.session_state.score / st.session_state.attempts) * 100
+    st.write(f"Accuracy: {accuracy:.2f}%")
+
 
 # ----------------------------
 # Sidebar
