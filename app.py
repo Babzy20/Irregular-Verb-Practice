@@ -1,15 +1,40 @@
-
 import streamlit as st
 import pandas as pd
 
-# Load verbs data
+# ----------------------------
+# Helper: Big achievement banner
+# ----------------------------
+def show_achievement_banner(message="🏆 Achievement Unlocked! 🎉"):
+    st.markdown(
+        f"<div style='text-align: center; font-size: 30px; color: gold;'>{message}</div>",
+        unsafe_allow_html=True
+    )
+    st.balloons()
+
+# ----------------------------
+# Load data
+# ----------------------------
 @st.cache_data
 def load_verbs():
     return pd.read_csv('verbs.csv')
 
-verbs_df = load_verbs()
+@st.cache_data
+def load_badges():
+    df = pd.read_csv("achievements.csv")
+    df['trigger'] = df['trigger'].apply(lambda x: int(x) if str(x).isdigit() else x)
+    return df.to_dict(orient='records')
 
-# Initialize session state
+@st.cache_data
+def load_reminders():
+    return pd.read_csv("reminders.csv").to_dict(orient='records')
+
+verbs_df = load_verbs()
+badges = load_badges()
+reminders = load_reminders()
+
+# ----------------------------
+# Session state init
+# ----------------------------
 for key, default in {
     'score': 0,
     'attempts': 0,
@@ -21,23 +46,9 @@ for key, default in {
     if key not in st.session_state:
         st.session_state[key] = default
 
-# Load badges (achievements)
-@st.cache_data
-def load_badges():
-    df = pd.read_csv("achievements.csv")
-    df['trigger'] = df['trigger'].apply(lambda x: int(x) if str(x).isdigit() else x)
-    return df.to_dict(orient='records')
-
-badges = load_badges()
-
-# Load reminders
-@st.cache_data
-def load_reminders():
-    return pd.read_csv("reminders.csv").to_dict(orient='records')
-
-reminders = load_reminders()
-
-# Check answers
+# ----------------------------
+# Check logic
+# ----------------------------
 def check_answers(base_form, simple_past, past_participle):
     correct = verbs_df[verbs_df['Base Form'] == base_form].iloc[0]
     return (
@@ -45,8 +56,10 @@ def check_answers(base_form, simple_past, past_participle):
         past_participle.strip().lower() == correct['Past Participle'].strip().lower()
     ), correct
 
-# Check badges
 def check_badges(streak):
+    if "badges" not in st.session_state:
+        st.session_state.badges = []
+
     new_badges = []
     for badge in badges:
         if streak >= badge["trigger"] and badge["name"] not in st.session_state.badges:
@@ -54,7 +67,6 @@ def check_badges(streak):
             new_badges.append(badge)
     return new_badges
 
-# Check reminders
 def check_reminders(base_form, simple_past, past_participle):
     new_reminders = []
     mistake = {"base_form": base_form, "simple_past": simple_past, "past_participle": past_participle}
@@ -80,16 +92,18 @@ def check_reminders(base_form, simple_past, past_participle):
             new_reminders.append(reminder)
     return new_reminders
 
+# ----------------------------
 # UI
+# ----------------------------
 st.title("📚 Irregular Verbs Practice")
 mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_selector")
 
 if mode == "Grid Mode":
     st.header("🧩 Grid Mode")
+
     if "grid_verbs" not in st.session_state:
         st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
-    
-    # Add a flag to track new verbs button click
+
     if "new_verbs_clicked" not in st.session_state:
         st.session_state.new_verbs_clicked = False
 
@@ -97,12 +111,11 @@ if mode == "Grid Mode":
         st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
         st.session_state.new_verbs_clicked = True
 
-    # Clear inputs only once, right after clicking "New Verbs"
     if st.session_state.new_verbs_clicked:
         for i in range(10):
             st.session_state.pop(f"sp_{i}", None)
             st.session_state.pop(f"pp_{i}", None)
-        st.session_state.new_verbs_clicked = False  # Reset the flag
+        st.session_state.new_verbs_clicked = False
 
     check_pressed = st.button("🔍 Check All")
 
@@ -130,9 +143,10 @@ if mode == "Grid Mode":
                 new_reminders = check_reminders(row['Base Form'], sp, pp)
                 for reminder in new_reminders:
                     st.toast(f"⚠️ Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
+
             new_badges = check_badges(st.session_state.streak)
             for badge in new_badges:
-                st.toast(f"🎉 New Badge: {badge['emoji']} {badge['name']} - {badge['description']}")
+                show_achievement_banner(f"{badge['emoji']} {badge['name']} - {badge['description']}")
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
     if st.session_state.attempts > 0:
@@ -152,12 +166,6 @@ elif mode == "Single Verb Quiz":
     user_sp = st.text_input("Simple Past")
     user_pp = st.text_input("Past Participle")
 
-    if st.button("🆕 New Verbs"):
-        st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
-    for i in range(10):
-        st.session_state.pop(f"sp_{i}", None)
-        st.session_state.pop(f"pp_{i}", None)
-    
     if st.button("Check Answer"):
         is_correct, correct = check_answers(verb['Base Form'], user_sp, user_pp)
         st.session_state.attempts += 1
@@ -175,16 +183,18 @@ elif mode == "Single Verb Quiz":
 
         new_badges = check_badges(st.session_state.streak)
         for badge in new_badges:
-            st.toast(f"🎉 New Badge: {badge['emoji']} {badge['name']} - {badge['description']}")
+            show_achievement_banner(f"{badge['emoji']} {badge['name']} - {badge['description']}")
 
-        st.session_state.current_verb = verbs_df.sample(1).iloc[0]  # Load new verb after answer
+        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
     if st.session_state.attempts > 0:
         accuracy = (st.session_state.score / st.session_state.attempts) * 100
         st.write(f"Accuracy: {accuracy:.2f}%")
 
+# ----------------------------
 # Sidebar
+# ----------------------------
 with st.sidebar:
     st.header("🏅 Achievements")
     badge_table = []
