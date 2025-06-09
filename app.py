@@ -201,17 +201,12 @@ elif mode == "Single Verb Quiz":
         else:
             st.error(f"Incorrect. Correct answers: {correct['Simple Past']}, {correct['Past Participle']}")
             st.session_state.streak = 0
-            new_reminders = check_reminders(verb['Base Form'], user_sp, user_pp)
-            for reminder in new_reminders:
-                st.warning(f"⚠️ Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
 
-        new_badges = check_badges(st.session_state.streak)
-        for badge in new_badges:
-            show_achievement_banner(f"{badge['emoji']} {badge['name']} - {badge['description']}")
+        # Reset inputs
+        st.session_state["user_sp"] = ""
+        st.session_state["user_pp"] = ""
 
-        # Reset inputs and get a new verb
-        st.session_state.user_sp = ""
-        st.session_state.user_pp = ""
+        # Get a new verb
         st.session_state.current_verb = verbs_df.sample(1).iloc[0]
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
