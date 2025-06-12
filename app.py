@@ -124,6 +124,7 @@ def check_reminders(base_form, simple_past, past_participle):
 st.title("📚 Irregular Verbs Practice")
 mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_selector")
 
+# 🔁 Replace your existing Grid Mode logic with this block
 if mode == "Grid Mode":
     st.header("🧩 Grid Mode")
 
@@ -137,6 +138,7 @@ if mode == "Grid Mode":
             st.session_state.pop(f"pp_{i}", None)
 
     check_pressed = st.button("🔍 Check All")
+    grid_correct_count = 0
 
     for i, row in st.session_state.grid_verbs.iterrows():
         col1, col2, col3, col4 = st.columns([2, 1.5, 1.5, 2])
@@ -153,6 +155,7 @@ if mode == "Grid Mode":
             if is_correct:
                 st.session_state.score += 1
                 st.session_state.streak += 1
+                grid_correct_count += 1
                 with col4:
                     st.success("✓")
             else:
@@ -163,15 +166,24 @@ if mode == "Grid Mode":
                 for reminder in new_reminders:
                     st.warning(f"⚠️ Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
 
-            new_badges = check_badges(st.session_state.streak)
+            new_badges = check_badges(streak=st.session_state.streak)
             for badge in new_badges:
                 show_achievement_banner(f"{badge['emoji']} {badge['name']} - {badge['description']}")
+
+    if check_pressed and grid_correct_count == 10:
+        new_badges = check_badges(trigger_name="grid_perfect")
+        for badge in new_badges:
+            show_achievement_banner(f"{badge['emoji']} {badge['name']} - {badge['description']}")
+
+        # Clear all inputs after a perfect grid
+        for i in range(10):
+            st.session_state[f"sp_{i}"] = ""
+            st.session_state[f"pp_{i}"] = ""
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
     if st.session_state.attempts > 0:
         accuracy = (st.session_state.score / st.session_state.attempts) * 100
         st.write(f"Accuracy: {accuracy:.2f}%")
-
 elif mode == "Single Verb Quiz":
     st.header("🎯 Single Verb Quiz")
 
