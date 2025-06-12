@@ -140,8 +140,8 @@ if mode == "Grid Mode":
     if st.button("🆕 New Verbs"):
         st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
         for i in range(10):
-            st.session_state.pop(f"sp_{i}", None)
-            st.session_state.pop(f"pp_{i}", None)
+            st.session_state[f"sp_{i}"] = ""
+            st.session_state[f"pp_{i}"] = ""
 
     check_pressed = st.button("🔍 Check All")
     grid_correct_count = 0
