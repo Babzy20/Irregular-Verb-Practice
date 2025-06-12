@@ -4,7 +4,7 @@ import pandas as pd
 # ----------------------------
 # Helper: Big achievement banner
 # ----------------------------
-def show_achievement_banner(message="🏆 Achievement Unlocked! 🎉"):
+def show_achievement_banner(message="\ud83c\udfc6 Achievement Unlocked! \ud83c\udf89"):
     st.markdown(
         f"<div style='text-align: center; font-size: 30px; color: gold;'>{message}</div>",
         unsafe_allow_html=True
@@ -64,13 +64,11 @@ def check_badges(streak=None, trigger_name=None):
     for badge in badges:
         trigger = badge["trigger"]
 
-        # Check for streak-based badge
         if isinstance(trigger, int) and streak is not None:
             if streak >= trigger and badge["name"] not in st.session_state.badges:
                 st.session_state.badges.append(badge["name"])
                 new_badges.append(badge)
 
-        # Check for trigger-name-based badge (like a reminder event)
         elif isinstance(trigger, str) and trigger_name == trigger:
             if badge["name"] not in st.session_state.badges:
                 st.session_state.badges.append(badge["name"])
@@ -86,7 +84,6 @@ def check_reminders(base_form, simple_past, past_participle):
     for reminder in reminders:
         trigger = reminder["trigger"]
 
-        # Example reminder checks (adjust according to your data triggers)
         if trigger == "feel_fall" and (simple_past.lower() in ["fell", "felt"] or past_participle.lower() in ["fallen", "felt"]):
             if reminder["name"] not in st.session_state.reminders:
                 st.session_state.reminders.append(reminder["name"])
@@ -124,23 +121,22 @@ def check_reminders(base_form, simple_past, past_participle):
 # ----------------------------
 # UI
 # ----------------------------
-st.title("📚 Irregular Verbs Practice")
+st.title("\ud83d\udcda Irregular Verbs Practice")
 mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_selector")
 
 if mode == "Grid Mode":
-    st.header("🧩 Grid Mode")
+    st.header("\ud83e\uddf9 Grid Mode")
 
     if "grid_verbs" not in st.session_state:
         st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
 
-    if st.button("🆕 New Verbs"):
+    if st.button("\ud83c\udd95 New Verbs"):
         st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
-        # Clear text inputs
         for i in range(10):
             st.session_state.pop(f"sp_{i}", None)
             st.session_state.pop(f"pp_{i}", None)
 
-    check_pressed = st.button("🔍 Check All")
+    check_pressed = st.button("\ud83d\udd0d Check All")
 
     for i, row in st.session_state.grid_verbs.iterrows():
         col1, col2, col3, col4 = st.columns([2, 1.5, 1.5, 2])
@@ -158,15 +154,14 @@ if mode == "Grid Mode":
                 st.session_state.score += 1
                 st.session_state.streak += 1
                 with col4:
-                    st.success("✓")
+                    st.success("\u2713")
             else:
                 st.session_state.streak = 0
                 with col4:
                     st.error(f"{correct['Simple Past']}, {correct['Past Participle']}")
                 new_reminders = check_reminders(row['Base Form'], sp, pp)
                 for reminder in new_reminders:
-                    # Removed st.toast (not a Streamlit function)
-                    st.warning(f"⚠️ Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
+                    st.warning(f"\u26a0\ufe0f Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
 
             new_badges = check_badges(st.session_state.streak)
             for badge in new_badges:
@@ -177,81 +172,83 @@ if mode == "Grid Mode":
         accuracy = (st.session_state.score / st.session_state.attempts) * 100
         st.write(f"Accuracy: {accuracy:.2f}%")
 
-def check_answer_callback():
-    is_correct, correct = check_answers(
-        st.session_state.current_verb['Base Form'],
-        st.session_state.user_sp,
-        st.session_state.user_pp
-    )
-    st.session_state.attempts += 1
+elif mode == "Single Verb Quiz":
+    def check_answer_callback():
+        is_correct, correct = check_answers(
+            st.session_state.current_verb['Base Form'],
+            st.session_state.user_sp,
+            st.session_state.user_pp
+        )
+        st.session_state.attempts += 1
 
-    if is_correct:
-        st.session_state.score += 1
-        st.session_state.streak += 1
-        st.session_state.feedback = ("success", "Correct! ✅")
-    else:
-        st.session_state.streak = 0
-        correct_text = f"Incorrect. Correct answers: {correct['Simple Past']}, {correct['Past Participle']}"
-        st.session_state.feedback = ("error", correct_text)
+        if is_correct:
+            st.session_state.score += 1
+            st.session_state.streak += 1
+            st.session_state.feedback = ("success", "Correct! \u2705")
+        else:
+            st.session_state.streak = 0
+            correct_text = f"Incorrect. Correct answers: {correct['Simple Past']}, {correct['Past Participle']}"
+            st.session_state.feedback = ("error", correct_text)
 
-    # Reset inputs
-    st.session_state.user_sp = ""
-    st.session_state.user_pp = ""
+            new_reminders = check_reminders(
+                st.session_state.current_verb['Base Form'],
+                st.session_state.user_sp,
+                st.session_state.user_pp
+            )
+            for reminder in new_reminders:
+                st.warning(f"\u26a0\ufe0f Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
 
-    # Get new verb
-    st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+        new_badges = check_badges(streak=st.session_state.streak)
+        for badge in new_badges:
+            show_achievement_banner(f"{badge['emoji']} {badge['name']} - {badge['description']}")
 
-# Initialize current verb if needed
-if "current_verb" not in st.session_state:
-    st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+        st.session_state.user_sp = ""
+        st.session_state.user_pp = ""
+        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
 
-# Initialize input fields in session state if missing
-if "user_sp" not in st.session_state:
-    st.session_state.user_sp = ""
-if "user_pp" not in st.session_state:
-    st.session_state.user_pp = ""
+    if "current_verb" not in st.session_state:
+        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+    if "user_sp" not in st.session_state:
+        st.session_state.user_sp = ""
+    if "user_pp" not in st.session_state:
+        st.session_state.user_pp = ""
+    if "feedback" not in st.session_state:
+        st.session_state.feedback = ("", "")
 
-# Initialize feedback placeholder
-if "feedback" not in st.session_state:
-    st.session_state.feedback = ("", "")
+    st.header("\ud83c\udfaf Single Verb Quiz")
+    verb = st.session_state.current_verb
+    st.write(f"**Base form:** {verb['Base Form']}")
 
-st.header("🎯 Single Verb Quiz")
+    user_sp = st.text_input("Simple Past", key="user_sp")
+    user_pp = st.text_input("Past Participle", key="user_pp")
 
-verb = st.session_state.current_verb
-st.write(f"**Base form:** {verb['Base Form']}")
+    if st.button("Check Answer", on_click=check_answer_callback):
+        pass
 
-user_sp = st.text_input("Simple Past", key="user_sp")
-user_pp = st.text_input("Past Participle", key="user_pp")
+    if st.session_state.feedback[0] == "success":
+        st.success(st.session_state.feedback[1])
+    elif st.session_state.feedback[0] == "error":
+        st.error(st.session_state.feedback[1])
 
-if st.button("Check Answer", on_click=check_answer_callback):
-    pass  # Callback does all work
-
-# Show feedback
-if st.session_state.feedback[0] == "success":
-    st.success(st.session_state.feedback[1])
-elif st.session_state.feedback[0] == "error":
-    st.error(st.session_state.feedback[1])
-
-st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
-if st.session_state.attempts > 0:
-    accuracy = (st.session_state.score / st.session_state.attempts) * 100
-    st.write(f"Accuracy: {accuracy:.2f}%")
-
+    st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
+    if st.session_state.attempts > 0:
+        accuracy = (st.session_state.score / st.session_state.attempts) * 100
+        st.write(f"Accuracy: {accuracy:.2f}%")
 
 # ----------------------------
 # Sidebar
 # ----------------------------
 with st.sidebar:
-    st.header("🏅 Achievements")
+    st.header("\ud83c\udfcb\ufe0f\u200d\u2642\ufe0f Achievements")
     badge_table = []
     for badge in badges:
-        status = "✅ Earned" if badge["name"] in st.session_state.badges else "🔒"
+        status = "\u2705 Earned" if badge["name"] in st.session_state.badges else "\ud83d\udd12"
         badge_table.append([badge["emoji"], badge["name"], badge["description"], status])
     st.table(pd.DataFrame(badge_table, columns=["Icon", "Badge Name", "Description", "Status"]))
 
-    st.header("😬 Reminders: Learn from Your Mistakes")
+    st.header("\ud83d\ude2c Reminders: Learn from Your Mistakes")
     reminder_table = []
     for reminder in reminders:
-        status = "✅ Earned" if reminder["name"] in st.session_state.reminders else "🔒"
+        status = "\u2705 Earned" if reminder["name"] in st.session_state.reminders else "\ud83d\udd12"
         reminder_table.append([reminder["emoji"], reminder["name"], reminder["description"], status])
     st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Description", "Status"]))
