@@ -1,4 +1,5 @@
 emoji,name,description,trigger
 🥇,Five Correct Answers,Awarded for five correct answers in a row.,5
 🏆,Ten Correct Answers,Awarded for ten correct answers in a row.,10
-🚗, put! put! put!, put_put, PUT! PUT! PUT!
+🚗,Put! put! put!, put_put, PUT! PUT! PUT!
+🧠,Grid Master,You got a perfect 10 in Grid Mode!,grid_perfect
