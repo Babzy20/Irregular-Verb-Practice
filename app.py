@@ -124,12 +124,18 @@ def check_reminders(base_form, simple_past, past_participle):
 st.title("📚 Irregular Verbs Practice")
 mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_selector")
 
-# 🔁 Replace your existing Grid Mode logic with this block
 if mode == "Grid Mode":
     st.header("🧩 Grid Mode")
 
     if "grid_verbs" not in st.session_state:
         st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
+
+    # If reset flag set, clear all inputs and remove the flag
+    if st.session_state.get("reset_grid", False):
+        for i in range(10):
+            st.session_state[f"sp_{i}"] = ""
+            st.session_state[f"pp_{i}"] = ""
+        st.session_state["reset_grid"] = False
 
     if st.button("🆕 New Verbs"):
         st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
@@ -174,16 +180,15 @@ if mode == "Grid Mode":
         new_badges = check_badges(trigger_name="grid_perfect")
         for badge in new_badges:
             show_achievement_banner(f"{badge['emoji']} {badge['name']} - {badge['description']}")
-
-        # Clear all inputs after a perfect grid
-        for i in range(10):
-            st.session_state[f"sp_{i}"] = ""
-            st.session_state[f"pp_{i}"] = ""
+        
+        # Set a flag to clear inputs on next rerun instead of immediate clearing
+        st.session_state["reset_grid"] = True
 
     st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
     if st.session_state.attempts > 0:
         accuracy = (st.session_state.score / st.session_state.attempts) * 100
         st.write(f"Accuracy: {accuracy:.2f}%")
+
 elif mode == "Single Verb Quiz":
     st.header("🎯 Single Verb Quiz")
 
