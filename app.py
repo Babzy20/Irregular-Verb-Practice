@@ -4,7 +4,7 @@ import pandas as pd
 # ----------------------------
 # Helper: Big achievement banner
 # ----------------------------
-def show_achievement_banner(message="\ud83c\udfc6 Achievement Unlocked! \ud83c\udf89"):
+def show_achievement_banner(message="🏆 Achievement Unlocked! 🎉"):
     st.markdown(
         f"<div style='text-align: center; font-size: 30px; color: gold;'>{message}</div>",
         unsafe_allow_html=True
@@ -121,22 +121,22 @@ def check_reminders(base_form, simple_past, past_participle):
 # ----------------------------
 # UI
 # ----------------------------
-st.title("\ud83d\udcda Irregular Verbs Practice")
+st.title("📚 Irregular Verbs Practice")
 mode = st.radio("Choose a mode:", ["Single Verb Quiz", "Grid Mode"], key="mode_selector")
 
 if mode == "Grid Mode":
-    st.header("\ud83e\uddf9 Grid Mode")
+    st.header("🧩 Grid Mode")
 
     if "grid_verbs" not in st.session_state:
         st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
 
-    if st.button("\ud83c\udd95 New Verbs"):
+    if st.button("🆕 New Verbs"):
         st.session_state.grid_verbs = verbs_df.sample(10).reset_index(drop=True)
         for i in range(10):
             st.session_state.pop(f"sp_{i}", None)
             st.session_state.pop(f"pp_{i}", None)
 
-    check_pressed = st.button("\ud83d\udd0d Check All")
+    check_pressed = st.button("🔍 Check All")
 
     for i, row in st.session_state.grid_verbs.iterrows():
         col1, col2, col3, col4 = st.columns([2, 1.5, 1.5, 2])
@@ -154,14 +154,14 @@ if mode == "Grid Mode":
                 st.session_state.score += 1
                 st.session_state.streak += 1
                 with col4:
-                    st.success("\u2713")
+                    st.success("✓")
             else:
                 st.session_state.streak = 0
                 with col4:
                     st.error(f"{correct['Simple Past']}, {correct['Past Participle']}")
                 new_reminders = check_reminders(row['Base Form'], sp, pp)
                 for reminder in new_reminders:
-                    st.warning(f"\u26a0\ufe0f Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
+                    st.warning(f"⚠️ Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
 
             new_badges = check_badges(st.session_state.streak)
             for badge in new_badges:
@@ -173,6 +173,8 @@ if mode == "Grid Mode":
         st.write(f"Accuracy: {accuracy:.2f}%")
 
 elif mode == "Single Verb Quiz":
+    st.header("🎯 Single Verb Quiz")
+
     def check_answer_callback():
         is_correct, correct = check_answers(
             st.session_state.current_verb['Base Form'],
@@ -184,23 +186,11 @@ elif mode == "Single Verb Quiz":
         if is_correct:
             st.session_state.score += 1
             st.session_state.streak += 1
-            st.session_state.feedback = ("success", "Correct! \u2705")
+            st.session_state.feedback = ("success", "Correct! ✅")
         else:
             st.session_state.streak = 0
             correct_text = f"Incorrect. Correct answers: {correct['Simple Past']}, {correct['Past Participle']}"
             st.session_state.feedback = ("error", correct_text)
-
-            new_reminders = check_reminders(
-                st.session_state.current_verb['Base Form'],
-                st.session_state.user_sp,
-                st.session_state.user_pp
-            )
-            for reminder in new_reminders:
-                st.warning(f"\u26a0\ufe0f Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
-
-        new_badges = check_badges(streak=st.session_state.streak)
-        for badge in new_badges:
-            show_achievement_banner(f"{badge['emoji']} {badge['name']} - {badge['description']}")
 
         st.session_state.user_sp = ""
         st.session_state.user_pp = ""
@@ -208,6 +198,7 @@ elif mode == "Single Verb Quiz":
 
     if "current_verb" not in st.session_state:
         st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+
     if "user_sp" not in st.session_state:
         st.session_state.user_sp = ""
     if "user_pp" not in st.session_state:
@@ -215,7 +206,6 @@ elif mode == "Single Verb Quiz":
     if "feedback" not in st.session_state:
         st.session_state.feedback = ("", "")
 
-    st.header("\ud83c\udfaf Single Verb Quiz")
     verb = st.session_state.current_verb
     st.write(f"**Base form:** {verb['Base Form']}")
 
@@ -239,16 +229,16 @@ elif mode == "Single Verb Quiz":
 # Sidebar
 # ----------------------------
 with st.sidebar:
-    st.header("\ud83c\udfcb\ufe0f\u200d\u2642\ufe0f Achievements")
+    st.header("🏅 Achievements")
     badge_table = []
     for badge in badges:
-        status = "\u2705 Earned" if badge["name"] in st.session_state.badges else "\ud83d\udd12"
+        status = "✅ Earned" if badge["name"] in st.session_state.badges else "🔒"
         badge_table.append([badge["emoji"], badge["name"], badge["description"], status])
     st.table(pd.DataFrame(badge_table, columns=["Icon", "Badge Name", "Description", "Status"]))
 
-    st.header("\ud83d\ude2c Reminders: Learn from Your Mistakes")
+    st.header("😬 Reminders: Learn from Your Mistakes")
     reminder_table = []
     for reminder in reminders:
-        status = "\u2705 Earned" if reminder["name"] in st.session_state.reminders else "\ud83d\udd12"
+        status = "✅ Earned" if reminder["name"] in st.session_state.reminders else "🔒"
         reminder_table.append([reminder["emoji"], reminder["name"], reminder["description"], status])
     st.table(pd.DataFrame(reminder_table, columns=["Icon", "Reminder Name", "Description", "Status"]))
