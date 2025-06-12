@@ -192,47 +192,79 @@ if mode == "Grid Mode":
 elif mode == "Single Verb Quiz":
     st.header("🎯 Single Verb Quiz")
 
-   def check_answer_callback():
-    is_correct, correct = check_answers(
-        st.session_state.current_verb['Base Form'],
-        st.session_state.user_sp,
-        st.session_state.user_pp
-    )
-    st.session_state.attempts += 1
-
-    if is_correct:
-        st.session_state.score += 1
-        st.session_state.streak += 1
-        st.session_state.feedback = ("success", "Correct! ✅")
-    else:
-        st.session_state.streak = 0
-        correct_text = f"Incorrect. Correct answers: {correct['Simple Past']}, {correct['Past Participle']}"
-        st.session_state.feedback = ("error", correct_text)
-        
-        # Add mistake to mistake list (like in grid mode)
-        st.session_state.mistakes.append({
-            "base_form": st.session_state.current_verb['Base Form'],
-            "simple_past": st.session_state.user_sp,
-            "past_participle": st.session_state.user_pp
-        })
-
-        # Check reminders for the mistake, show warnings if any
-        new_reminders = check_reminders(
+    def check_answer_callback():
+        is_correct, correct = check_answers(
             st.session_state.current_verb['Base Form'],
             st.session_state.user_sp,
             st.session_state.user_pp
         )
-        for reminder in new_reminders:
-            st.warning(f"⚠️ Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
+        st.session_state.attempts += 1
 
-    # Check badges on streak or triggers, show achievement banners
-    new_badges = check_badges(streak=st.session_state.streak)
-    for badge in new_badges:
-        show_achievement_banner(f"{badge['emoji']} {badge['name']} - {badge['description']}")
+        if is_correct:
+            st.session_state.score += 1
+            st.session_state.streak += 1
+            st.session_state.feedback = ("success", "Correct! ✅")
+        else:
+            st.session_state.streak = 0
+            correct_text = f"Incorrect. Correct answers: {correct['Simple Past']}, {correct['Past Participle']}"
+            st.session_state.feedback = ("error", correct_text)
 
-    st.session_state.user_sp = ""
-    st.session_state.user_pp = ""
-    st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+            # Add mistake to mistake list (like in grid mode)
+            st.session_state.mistakes.append({
+                "base_form": st.session_state.current_verb['Base Form'],
+                "simple_past": st.session_state.user_sp,
+                "past_participle": st.session_state.user_pp
+            })
+
+            # Check reminders for the mistake, show warnings if any
+            new_reminders = check_reminders(
+                st.session_state.current_verb['Base Form'],
+                st.session_state.user_sp,
+                st.session_state.user_pp
+            )
+            for reminder in new_reminders:
+                st.warning(f"⚠️ Reminder: {reminder['emoji']} {reminder['name']} - {reminder['description']}")
+
+        # Check badges on streak or triggers, show achievement banners
+        new_badges = check_badges(streak=st.session_state.streak)
+        for badge in new_badges:
+            show_achievement_banner(f"{badge['emoji']} {badge['name']} - {badge['description']}")
+
+        st.session_state.user_sp = ""
+        st.session_state.user_pp = ""
+        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+
+    # Then outside the function, the UI input/output:
+
+    if "current_verb" not in st.session_state:
+        st.session_state.current_verb = verbs_df.sample(1).iloc[0]
+
+    if "user_sp" not in st.session_state:
+        st.session_state.user_sp = ""
+    if "user_pp" not in st.session_state:
+        st.session_state.user_pp = ""
+    if "feedback" not in st.session_state:
+        st.session_state.feedback = ("", "")
+
+    verb = st.session_state.current_verb
+    st.write(f"**Base form:** {verb['Base Form']}")
+
+    user_sp = st.text_input("Simple Past", key="user_sp")
+    user_pp = st.text_input("Past Participle", key="user_pp")
+
+    if st.button("Check Answer", on_click=check_answer_callback):
+        pass
+
+    if st.session_state.feedback[0] == "success":
+        st.success(st.session_state.feedback[1])
+    elif st.session_state.feedback[0] == "error":
+        st.error(st.session_state.feedback[1])
+
+    st.write(f"Score: {st.session_state.score}/{st.session_state.attempts}")
+    if st.session_state.attempts > 0:
+        accuracy = (st.session_state.score / st.session_state.attempts) * 100
+        st.write(f"Accuracy: {accuracy:.2f}%")
+
 
 # ----------------------------
 # Sidebar
